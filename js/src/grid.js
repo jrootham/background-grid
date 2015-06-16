@@ -39,7 +39,7 @@ function numbers(count) {
 }
 
 function tohex(number) {
-    var result = number.toString(16);
+    var result = Math.min(255, Math.max( 0, Math.floor(number))).toString(16);
 
     if (number < 16) {
         result = '0' + result;
@@ -111,7 +111,9 @@ class Grid {
 
         for (var row = 0 ; row < spec.rowCount ; row++) {
             for (var column = 0 ; column < spec.columnCount ; column++) {
-                let newColour = setColour(undefined, row, spec.rowCount, column, spec.columnCount,
+                let oldColour = this.colourArray[row][column];
+
+                let newColour = setColour(oldColour, row, spec.rowCount, column, spec.columnCount,
                     state, mouseLocation);
 
                 if (!newColour.equals(this.colourArray[row][column])) {

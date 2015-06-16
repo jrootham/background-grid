@@ -27,8 +27,8 @@ function distance(mouseLocation, rowIndex, columnIndex) {
 
 function setColour(previous, rowIndex, rowCount, columnIndex, columnCount, state, mouseLocation) {
 
-//    let size = $('input[name="size"]:checked').val();
-    const size = 1;
+    let size = $('input[name="size"]:checked').val();
+//    const size = 1;
 
     var red = 100;
     if (rowIndex <= rowCount / 2 && columnIndex <= columnCount / 2)
@@ -39,7 +39,7 @@ function setColour(previous, rowIndex, rowCount, columnIndex, columnCount, state
     if (mouseLocation) {
         let range = distance(mouseLocation, rowIndex, columnIndex);
         if (range < size) {
-            red = Math.max(0, 255 * (size - range) / size);
+            red = 255 * (size - range) / size;
         }
     }
 
