@@ -156,9 +156,15 @@ function makeRectangle(ctx, startX, startY, endX, endY) {
     ctx.closePath();
 }
 
+function saveMouse(canvas, event) {
+    var location = canvas.offset();
+    return {x:event.pageX - location.left, y:event.pageY - location.top};
+}
+
 function action(specArray, canvas, foreground) {
     let state = {
         mousePosition: undefined,
+        downPosition: undefined,
         mouseDown: false,
         mouseUp: false,
         downTime: 0,
@@ -171,9 +177,7 @@ function action(specArray, canvas, foreground) {
     grid.show(spec, state);
 
     foreground.mousemove(function(event) {
-        var location = canvas.offset();
-        var target = {x:event.pageX - location.left, y:event.pageY - location.top};
-        state.mousePosition = target;
+        state.mousePosition = saveMouse(canvas, event);
     });
 
     foreground.mouseleave(function(event) {
@@ -187,6 +191,7 @@ function action(specArray, canvas, foreground) {
         state.upTime = 0;
         state.mouseDown = true;
         state.mouseUp = false;
+        state.downPosition = saveMouse(canvas, event);
     });
 
     foreground.mouseup(function(event) {
