@@ -183,6 +183,8 @@ function action(specArray, canvas, foreground) {
     });
 
     foreground.mousedown(function(event) {
+        state.downTime = 0;
+        state.upTime = 0;
         state.mouseDown = true;
         state.mouseUp = false;
     });
