@@ -17,13 +17,6 @@ function medium(parentWidth, parentHeight) {
     return parentWidth > 500 && parentHeight > 500;
 }
 
-function distance(mouseLocation, rowIndex, columnIndex) {
-    let dx = mouseLocation.column - columnIndex;
-    let dy = mouseLocation.row - rowIndex;
-
-    return Math.sqrt(dx * dx + dy * dy);
-}
-
 function setColour(previous, rowIndex, rowCount, columnIndex, columnCount, state, mouseLocation) {
     const MAX_RANGE = 200;
     const SCALE = 10;

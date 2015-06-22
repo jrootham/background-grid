@@ -29,15 +29,6 @@ if (!Array.prototype.find) {
     };
 }
 
-function numbers(count) {
-    var list = [];
-    for (var i = 0; i <= count; i++) {
-        list.push(i);
-    }
-
-    return list;
-}
-
 function tohex(number) {
     var result = Math.min(255, Math.max( 0, Math.floor(number))).toString(16);
 
@@ -65,18 +56,151 @@ class RGB {
     }
 }
 
+class Index {
+    constructor(row, column) {
+        this.row = row;
+        this.column = column;
+    }
+
+    distance(other) {
+        let dx = this.column - other.column;
+        let dy = this.row - other.row;
+
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    multiply(other) {
+        return new Index(this.row * other.row, this.column * other.column);
+    }
+
+    divide(other) {
+        return new Index(this.row / other.row, this.column / other.column);
+    }
+
+    floor() {
+        return new Index(Math.floor(this.row), Math.floor(this.column));
+    }
+
+    ceiling() {
+        return new Index(Math.ceil(this.row), Math.ceil(this.column));
+    }
+
+    round() {
+        return new Index(Math.round(this.row), Math.round(this.column));
+    }
+
+    equals(other) {
+        return this.row === other.row && this.column === other.column;
+    }
+}
+
+class Inputs {
+    constructor(foreground, grid) {
+        this.foreground = foreground;
+        this.change(grid);
+
+        this.mousePosition = undefined;
+        this.downPosition = undefined;
+        this.mouseDown = false;
+        this.mouseUp = false;
+        this.downTime = 0;
+        this.upTime = 0;
+        this.time = 0;
+
+        this.foreground.mousemove(event => {
+            this.mousePosition = this.saveMouse(event);
+        });
+
+        this.foreground.mouseleave(event => {
+            this.mousePosition = undefined;
+            this.downPosition = undefined;
+            this.mouseDown = false;
+            this.mouseUp = false;
+        });
+
+        this.foreground.mousedown(event => {
+            this.downTime = 0;
+            this.upTime = 0;
+            this.mouseDown = true;
+            this.mouseUp = false;
+            this.downPosition = this.saveMouse(event);
+        });
+
+        this.foreground.mouseup(event => {
+            this.mouseDown = false;
+            this.mouseUp = true;
+        });
+    }
+
+    change(grid) {
+        this.elementWidth = grid.elementWidth;
+        this.elementHeight = grid.elementHeight;
+        this.offset = grid.offset;
+    }
+
+    clock() {
+        this.time++;
+
+        if (this.mouseDown) {
+            this.downtime++;
+        }
+
+        if (this.mouseUp) {
+            this.upTime++;
+        }
+    }
+
+    saveMouse(event) {
+        let location = this.foreground.offset();
+        let x = event.pageX - location.left;
+        let y = event.pageY - location.top;
+        return new Index(
+            Math.floor(Math.max(y - this.offset, 0) / this.elementHeight),
+            Math.floor(Math.max(x - this.offset, 0) / this.elementWidth)
+        )
+    }
+
+    getMousePosition() {
+        return this.mousePosition;
+    }
+
+    getDownPosition() {
+        return this.downPosition;
+    }
+
+    isMouseDown(){
+        return this.mouseDown;
+    }
+
+    isMouseUp() {
+        return this.mouseUp;
+    }
+
+    getTimeSinceDown() {
+        return this.downTime;
+    }
+
+    getTimeSinceUp() {
+        return this.upTime;
+    }
+
+    getTime() {
+        return this.time;
+    }
+}
+
 class Grid {
-    constructor(spec, canvas) {
-        this.rowCount = spec.rowCount;
-        this.columnCount = spec.columnCount;
-        this.borderWidth = spec.borderWidth;
+    constructor(spec, canvas, foreground) {
+        this.spec = spec;
         this.borderColour = spec.borderColour;
+        this.borderWidth = spec.borderWidth(canvas.width(), canvas.height());
+        this.size = spec.size(canvas.width(), canvas.height(), this.borderWidth);
 
         let colourArray = [];
-        for (let row = 0 ; row < spec.rowCount ; row++) {
+        for (let row = 0 ; row < this.size.row ; row++) {
             colourArray[row] = [];
 
-            for (let column = 0; column < spec.columnCount; column++) {
+            for (let column = 0; column < this.size.column; column++) {
                 colourArray[row][column] = undefined;
             }
         }
@@ -92,131 +216,79 @@ class Grid {
         this.ctx.canvas.height = this.height;
 
         this.ctx.strokeStyle = hexColour(spec.borderColour);
-        this.ctx.lineWidth = spec.borderWidth;
-        this.offset = spec.borderWidth / 2;
+        this.ctx.lineWidth = this.borderWidth;
+        this.offset = this.borderWidth / 2;
 
-        this.elementWidth = (this.width - spec.borderWidth) / spec.columnCount;
-        this.elementHeight = (this.height - spec.borderWidth) / spec.rowCount;
+        this.elementWidth = (this.width - this.borderWidth) / this.size.column;
+        this.elementHeight = (this.height - this.borderWidth) / this.size.row;
     }
 
-    show(spec, state) {
-        let mouseLocation = undefined;
-
-        if (state.mousePosition) {
-            mouseLocation = {
-                column: Math.floor(Math.max(state.mousePosition.x - this.offset, 0) / this.elementWidth),
-                row: Math.floor(Math.max(state.mousePosition.y - this.offset, 0) / this.elementHeight)
-            }
-        }
-
-        for (var row = 0 ; row < spec.rowCount ; row++) {
-            for (var column = 0 ; column < spec.columnCount ; column++) {
+    show(inputs) {
+        for (var row = 0 ; row < this.size.row ; row++) {
+            for (var column = 0 ; column < this.size.column ; column++) {
+                let here = new Index(row, column);
                 let oldColour = this.colourArray[row][column];
 
-                let newColour = setColour(oldColour, row, spec.rowCount, column, spec.columnCount,
-                    state, mouseLocation);
+                let newColour = setColour(oldColour, here, this.size, inputs);
 
-                if (!newColour.equals(this.colourArray[row][column])) {
+                if (!newColour.equals(oldColour)) {
                     this.colourArray[row][column] = newColour;
 
                     this.ctx.fillStyle = hexColour(newColour);
-                    makeRectangle(this.ctx,
+                    this.makeRectangle(this.ctx,
                         Math.floor(this.offset + column * this.elementWidth),
                         Math.floor(this.offset + row * this.elementHeight),
                         Math.floor(this.offset + (column + 1) * this.elementWidth),
                         Math.floor(this.offset + (row + 1) * this.elementHeight));
 
                     this.ctx.fill();
-                    if (spec.borderWidth > 0) {
+                    if (this.borderWidth > 0) {
                         this.ctx.stroke();
                     }
                 }
 
             }
-
         }
     }
 
-    changed(spec) {
+    makeRectangle(ctx, startX, startY, endX, endY) {
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(startX, endY);
+        ctx.lineTo(endX, endY);
+        ctx.lineTo(endX, startY);
+        ctx.closePath();
+    }
+
+    changed(spec, canvas) {
+        let newBorder = spec.borderWidth(canvas.width(), canvas.height());
+        let newSize = spec.size(canvas.width(), canvas.height(), newBorder);
+
         return (
-            this.rowCount != spec.rowCount ||
-            this.columnCount != spec.columnCount ||
+            !this.size.equals(newSize) ||
             this.borderWidth != spec.borderWidth ||
             !this.borderColour.equals(spec.borderColour));
     }
 }
 
 
-function makeRectangle(ctx, startX, startY, endX, endY) {
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.lineTo(startX, endY);
-    ctx.lineTo(endX, endY);
-    ctx.lineTo(endX, startY);
-    ctx.closePath();
-}
-
-function saveMouse(canvas, event) {
-    var location = canvas.offset();
-    return {x:event.pageX - location.left, y:event.pageY - location.top};
-}
-
 function action(specArray, canvas, foreground) {
-    let state = {
-        mousePosition: undefined,
-        downPosition: undefined,
-        mouseDown: false,
-        mouseUp: false,
-        downTime: 0,
-        upTime: 0,
-        time:0
-    };
-
     let spec = getSpec(specArray, canvas);
-    let grid = new Grid(spec, canvas);
-    grid.show(spec, state);
-
-    foreground.mousemove(function(event) {
-        state.mousePosition = saveMouse(canvas, event);
-    });
-
-    foreground.mouseleave(function(event) {
-        state.mousePosition = undefined;
-        state.mouseDown = false;
-        state.mouseUp = false;
-    });
-
-    foreground.mousedown(function(event) {
-        state.downTime = 0;
-        state.upTime = 0;
-        state.mouseDown = true;
-        state.mouseUp = false;
-        state.downPosition = saveMouse(canvas, event);
-    });
-
-    foreground.mouseup(function(event) {
-        state.mouseDown = false;
-        state.mouseUp = true;
-    });
+    let grid = new Grid(spec, canvas, foreground);
+    let inputs = new Inputs(foreground, grid);
+    grid.show(inputs);
 
     setInterval(function() {
         let spec = getSpec(specArray, canvas);
 
-        if (grid.changed(spec)) {
-            grid = new Grid(spec, canvas);
+        if (grid.changed(spec, canvas)) {
+            grid = new Grid(spec, canvas, foreground);
+            inputs.change(grid);
         }
 
-        grid.show(spec, state)
+        grid.show(inputs);
 
-        state.time++;
-
-        if (state.mouseDown) {
-            state.downtime++;
-        }
-
-        if (state.mouseUp) {
-            state.upTime++;
-        }
+        inputs.clock();
     }, 50);
 }
 
@@ -227,3 +299,18 @@ function getSpec(specArray, canvas) {
 
     return found.spec;
 }
+
+/*
+ *      Convenience functions
+ */
+
+var always = (parentWidth, parentHeight) => true;
+
+var constantSize = (rows, columns) => {
+    return (parentWidth, parentHeight, border) => new Index(rows, columns);
+}
+
+var constantBorder = (size) => {
+    return (parentWidth, parentHeight) => size;
+}
+
