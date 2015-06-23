@@ -23,7 +23,7 @@ function setColour(previous, rowIndex, rowCount, columnIndex, columnCount, state
     let range = distance({column:0, row:0}, rowIndex, columnIndex);
     let factor = (MAX_RANGE - range) / MAX_RANGE;
 
-    return new RGB(
+    return new RGBA(
         0,
         128,
         255 * factor *  ((1 + - Math.cos((range - state.time) / SCALE)) / 2)
@@ -37,7 +37,7 @@ var specArray = [
             rowCount: 40,
             columnCount: 80,
             borderWidth: 0,
-            borderColour: new RGB(128, 128, 128),
+            borderColour: new RGBA(128, 128, 128),
             setColour: setColour
         }
     }

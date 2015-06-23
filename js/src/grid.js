@@ -29,30 +29,29 @@ if (!Array.prototype.find) {
     };
 }
 
-function tohex(number) {
-    var result = Math.min(255, Math.max( 0, Math.floor(number))).toString(16);
-
-    if (number < 16) {
-        result = '0' + result;
-    }
-
-    return result;
+function clip(number) {
+    return Math.min(255, Math.max( 0, Math.floor(number)));
 }
 
-function hexColour(colour) {
-    return '#' + tohex(colour.red) + tohex(colour.green) + tohex(colour.blue);
-}
 
-class RGB {
-    constructor(red, green, blue)
+class RGBA {
+    constructor(red, green, blue, alpha = 1.0)
     {
         this.red = red;
         this.green = green;
         this.blue = blue;
+        this.alpha = alpha;
     }
 
+    rgba() {
+        return `rgba(${clip(this.red)}, ${clip(this.green)}, ${clip(this.blue)}, ${this.alpha})`;
+    }
     equals(other) {
-        return other && this.red === other.red && this.green === other.green && this.blue === other.blue;
+        return other
+            && this.red === other.red
+            && this.green === other.green
+            && this.blue === other.blue
+            && this.alpha === other.alpha;
     }
 }
 
@@ -215,7 +214,7 @@ class Grid {
         this.ctx.canvas.width = this.width;
         this.ctx.canvas.height = this.height;
 
-        this.ctx.strokeStyle = hexColour(spec.borderColour);
+        this.ctx.strokeStyle = spec.borderColour.rgba();
         this.ctx.lineWidth = this.borderWidth;
         this.offset = this.borderWidth / 2;
 
@@ -234,7 +233,7 @@ class Grid {
                 if (!newColour.equals(oldColour)) {
                     this.colourArray[row][column] = newColour;
 
-                    this.ctx.fillStyle = hexColour(newColour);
+                    this.ctx.fillStyle = newColour.rgba();
                     this.makeRectangle(this.ctx,
                         Math.floor(this.offset + column * this.elementWidth),
                         Math.floor(this.offset + row * this.elementHeight),
@@ -278,6 +277,7 @@ function action(specArray, canvas, foreground) {
     let inputs = new Inputs(foreground, grid);
     grid.show(inputs);
 
+
     setInterval(function() {
         let spec = getSpec(specArray, canvas);
 
@@ -310,7 +310,22 @@ var constantSize = (rows, columns) => {
     return (parentWidth, parentHeight, border) => new Index(rows, columns);
 }
 
+var constantElementSize = (elementWidth, elementHeight) => {
+    return (parentWidth, parentHeight, border) => {
+        let columns = Math.floor((parentWidth - 2 *  border) / (elementWidth + border));
+        let rows = Math.floor((parentHeight - border) / (elementHeight + border));
+        return new Index(rows, columns);
+    }
+}
+
 var constantBorder = (size) => {
     return (parentWidth, parentHeight) => size;
 }
 
+var widthPercentageBorder = (percent) => {
+    return (parentWidth, parentHeight) => parentWidth * (percent / 100);
+}
+
+var heightPercentageBorder = (percent) => {
+    return (parentWidth, parentHeight) => parentHeight * (percent / 100);
+}

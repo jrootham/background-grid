@@ -10,16 +10,16 @@ function always(parentWidth, parentHeight) {
 }
 
 function setColour(previous, rowIndex, rowCount, columnIndex, columnCount, state, mouseLocation) {
-    let newColour = new RGB(255, 255, 255);
+    let newColour = new RGBA(255, 255, 255);
 
     if (previous) {
         if (mouseLocation && mouseLocation.row === rowIndex && mouseLocation.column === columnIndex) {
-            newColour = new RGB(
+            newColour = new RGBA(
                 Math.max(0, previous.red - 1),
                 Math.max(0, previous.green - 1),
                 Math.max(0, previous.blue - 1));
         } else {
-            newColour = new RGB(
+            newColour = new RGBA(
                 Math.min(255, previous.red + 1),
                 Math.min(255, previous.green + 1),
                 Math.min(255, previous.blue + 1));
@@ -36,7 +36,7 @@ var specArray = [
             rowCount: 5,
             columnCount: 5,
             borderWidth: 0,
-            borderColour: new RGB(128, 128, 128),
+            borderColour: new RGBA(128, 128, 128),
             setColour: setColour
         }
     }

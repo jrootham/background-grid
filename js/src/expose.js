@@ -1,11 +1,10 @@
 /**
- * follow.js
+ * expose.js
  *
- * Created by jrootham on 12/06/15.
+ * Created by jrootham on 23/06/15.
  *
  * Copyright © 2014 Jim Rootham
  */
-
 function big(parentWidth, parentHeight) {
     return parentWidth > 1000 && parentHeight > 1000;
 }
@@ -18,35 +17,27 @@ function setColour(previous, current, size, inputs) {
 
     let radius = $('input[name="size"]:checked').val();
 
-    var red = 100;
-    if (current.row <= size.row / 2 && current.column <= size.column / 2)
-    {
-        red = 0;
-    }
-
     let position = inputs.getMousePosition();
+
+    let transparent = 1.0;
 
     if (position) {
         let range = position.distance(current);
 
         if (range < radius) {
-            red = 255 * (radius - range) / radius;
+            transparent = 1.0 - (radius - range) / radius;
         }
     }
 
-    return new RGBA(
-        red,
-        Math.floor(255 * current.row / size.row),
-        Math.floor(255 * current.column / size.column)
-    );
+    return new RGBA(255,255, 255, transparent);
 }
 
 var specArray = [
     {
         condition: big,
         spec: {
-            size: constantSize(40, 80),
-            borderWidth: constantBorder(5),
+            size: constantElementSize(10, 10),
+            borderWidth: constantBorder(0),
             borderColour: new RGBA(128, 128, 128),
             setColour: setColour
         }
@@ -54,8 +45,8 @@ var specArray = [
     {
         condition: medium,
         spec: {
-            size: constantSize(20, 40),
-            borderWidth: constantBorder(3),
+            size: constantElementSize(10, 10),
+            borderWidth: constantBorder(0),
             borderColour: new RGBA(128, 128, 128),
             setColour: setColour
         }
@@ -63,8 +54,8 @@ var specArray = [
     {
         condition: always,
         spec: {
-            size: constantSize(10, 20),
-            borderWidth: constantBorder(1),
+            size: constantElementSize(10, 10),
+            borderWidth: constantBorder(0),
             borderColour: new RGBA(128, 128, 128),
             setColour: setColour
         }
