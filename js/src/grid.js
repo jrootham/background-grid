@@ -229,7 +229,6 @@ class Grid {
                 let oldColour = this.colourArray[row][column];
 
                 let newColour = setColour(oldColour, here, this.size, inputs);
-
                 if (!newColour.equals(oldColour)) {
                     this.colourArray[row][column] = newColour;
 
@@ -265,7 +264,7 @@ class Grid {
 
         return (
             !this.size.equals(newSize) ||
-            this.borderWidth != spec.borderWidth ||
+            this.borderWidth != newBorder ||
             !this.borderColour.equals(spec.borderColour));
     }
 }
@@ -276,7 +275,6 @@ function action(specArray, canvas, foreground) {
     let grid = new Grid(spec, canvas, foreground);
     let inputs = new Inputs(foreground, grid);
     grid.show(inputs);
-
 
     setInterval(function() {
         let spec = getSpec(specArray, canvas);

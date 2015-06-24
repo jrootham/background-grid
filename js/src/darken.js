@@ -5,24 +5,25 @@
  *
  * Copyright © 2014 Jim Rootham
  */
-function always(parentWidth, parentHeight) {
-    return true;
-}
 
-function setColour(previous, rowIndex, rowCount, columnIndex, columnCount, state, mouseLocation) {
+function setColour(previous, current, size, inputs) {
     let newColour = new RGBA(255, 255, 255);
 
+    let darkTick = parseInt($('input[name="dark"]:checked').val());
+    let lightTick = parseInt($('input[name="light"]:checked').val());
+
+    let mousePosition = inputs.getMousePosition();
     if (previous) {
-        if (mouseLocation && mouseLocation.row === rowIndex && mouseLocation.column === columnIndex) {
+        if (mousePosition && mousePosition.row === current.row && mousePosition.column === current.column) {
             newColour = new RGBA(
-                Math.max(0, previous.red - 1),
-                Math.max(0, previous.green - 1),
-                Math.max(0, previous.blue - 1));
+                Math.max(0, previous.red - darkTick),
+                Math.max(0, previous.green - darkTick),
+                Math.max(0, previous.blue - darkTick));
         } else {
             newColour = new RGBA(
-                Math.min(255, previous.red + 1),
-                Math.min(255, previous.green + 1),
-                Math.min(255, previous.blue + 1));
+                Math.min(255, previous.red + lightTick),
+                Math.min(255, previous.green + lightTick),
+                Math.min(255, previous.blue + lightTick));
         }
     }
 
@@ -33,9 +34,8 @@ var specArray = [
     {
         condition: always,
         spec: {
-            rowCount: 5,
-            columnCount: 5,
-            borderWidth: 0,
+            size: constantSize(5, 5),
+            borderWidth: constantBorder(0),
             borderColour: new RGBA(128, 128, 128),
             setColour: setColour
         }
