@@ -9,6 +9,26 @@
 </head>
 <body>
 <h1>Wave</h1>
+<div>
+    Wave distance
+    <input type="radio" name="max_size" value="100">100</input>
+    <input type="radio" name="max_size" value="200">200</input>
+    <input type="radio" name="max_size" value="400" checked>400</input>
+    <input type="radio" name="max_size" value="800">800</input>
+
+    Wave size
+    <input type="radio" name="scale" value="1">1</input>
+    <input type="radio" name="scale" value="2">2</input>
+    <input type="radio" name="scale" value="4" checked>4</input>
+    <input type="radio" name="scale" value="8">8</input>
+    <input type="radio" name="scale" value="16">16</input>
+
+    Location
+    <input type="radio" name="row_factor" value="0" checked>top</input>
+    <input type="radio" name="row_factor" value="0.5">middle</input>
+    <input type="radio" name="column_factor" value="0" checked>left</input>
+    <input type="radio" name="column_factor" value="0.5">middle</input>
+</div>
 <div id="container">
     <div id="background"><canvas id="drawing"></canvas></div>
     <div id="foreground"></div>

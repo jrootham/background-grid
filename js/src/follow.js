@@ -16,7 +16,7 @@ function medium(parentWidth, parentHeight) {
 
 function setColour(previous, current, size, inputs) {
 
-    let radius = $('input[name="size"]:checked').val();
+    let radius = parseInt($('input[name="size"]:checked').val());
 
     var red = 100;
     if (current.row <= size.row / 2 && current.column <= size.column / 2)
