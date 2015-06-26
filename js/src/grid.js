@@ -287,7 +287,7 @@ function action(specArray, canvas, foreground) {
         grid.show(inputs);
 
         inputs.clock();
-    }, 50);
+    }, 10);
 }
 
 function getSpec(specArray, canvas) {
