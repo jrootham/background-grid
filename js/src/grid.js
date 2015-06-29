@@ -233,12 +233,13 @@ class Grid {
                     this.colourArray[row][column] = newColour;
 
                     this.ctx.fillStyle = newColour.rgba();
-                    this.makeRectangle(this.ctx,
+                    let rect = this.makeRectangle(this.ctx,
                         Math.floor(this.offset + column * this.elementWidth),
                         Math.floor(this.offset + row * this.elementHeight),
                         Math.floor(this.offset + (column + 1) * this.elementWidth),
                         Math.floor(this.offset + (row + 1) * this.elementHeight));
 
+                    this.ctx.clearRect(rect.x, rect.y, rect.w, rect.h);
                     this.ctx.fill();
                     if (this.borderWidth > 0) {
                         this.ctx.stroke();
@@ -249,6 +250,8 @@ class Grid {
         }
     }
 
+    // makeRectangle both returns and has side effects
+
     makeRectangle(ctx, startX, startY, endX, endY) {
         ctx.beginPath();
         ctx.moveTo(startX, startY);
@@ -256,6 +259,13 @@ class Grid {
         ctx.lineTo(endX, endY);
         ctx.lineTo(endX, startY);
         ctx.closePath();
+
+        return {
+            x : startX,
+            y : startY,
+            w : endX - startX,
+            h : endY - startY
+        }
     }
 
     changed(spec, canvas) {

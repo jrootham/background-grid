@@ -13,10 +13,13 @@ function medium(parentWidth, parentHeight) {
     return parentWidth > 500 && parentHeight > 500;
 }
 
+
+var radius = parseInt($('input[name="size"]:checked').val());
+$('input[name="size"]').change(function(event) {
+    radius = parseInt(this.val());
+})
+
 function setColour(previous, current, size, inputs) {
-
-    let radius = $('input[name="size"]:checked').val();
-
     let position = inputs.getMousePosition();
 
     let transparent = 1.0;
