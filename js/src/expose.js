@@ -14,10 +14,12 @@ function medium(parentWidth, parentHeight) {
 }
 
 
-var radius = parseInt($('input[name="size"]:checked').val());
-$('input[name="size"]').change(function(event) {
-    radius = parseInt(this.val());
-})
+var radius = parseInt($("input[name=size]:checked").val());
+
+$('input[type=radio][name=size]').change(
+    function() {
+        radius = parseInt(this.value);
+    });
 
 function setColour(previous, current, size, inputs) {
     let position = inputs.getMousePosition();
