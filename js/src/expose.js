@@ -67,4 +67,4 @@ var specArray = [
     }
 ]
 
-action(specArray, $('#drawing'), $('#foreground'));
+action(specArray, $('#drawing'), $('#foreground'), 30);

@@ -14,9 +14,14 @@ function medium(parentWidth, parentHeight) {
     return parentWidth > 500 && parentHeight > 500;
 }
 
-function setColour(previous, current, size, inputs) {
+var radius = parseInt($('input[name="size"]:checked').val());
+$('input[type=radio][name=size]').change(
+    function() {
+        radius = parseInt(this.value);
+    });
 
-    let radius = parseInt($('input[name="size"]:checked').val());
+
+function setColour(previous, current, size, inputs) {
 
     var red = 100;
     if (current.row <= size.row / 2 && current.column <= size.column / 2)
@@ -71,4 +76,4 @@ var specArray = [
     }
 ]
 
-action(specArray, $('#drawing'), $('#foreground'));
+action(specArray, $('#drawing'), $('#foreground'), 30);

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Splash</title>
+    <link href="../css/grid.css" rel="stylesheet" type="text/css" />
+    <script type="text/javascript" src="../js/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="../js/build/grid.js"></script>
+</head>
+<body>
+    <h1>Splash</h1>
+    <div>
+        Splash speed
+        <input type="radio" name="down_speed" value="1">1</input>
+        <input type="radio" name="down_speed" value="2">1/2</input>
+        <input type="radio" name="down_speed" value="4" checked>1/4</input>
+        <input type="radio" name="down_speed" value="8">1/8</input>
+        <input type="radio" name="down_speed" value="16">1/16</input>
+
+        Unsplash speed
+        <input type="radio" name="up_speed" value="1">1</input>
+        <input type="radio" name="up_speed" value="2">1/2</input>
+        <input type="radio" name="up_speed" value="4" checked>1/4</input>
+        <input type="radio" name="up_speed" value="8">1/8</input>
+        <input type="radio" name="up_speed" value="16">1/16</input>
+
+        Wave size
+        <input type="radio" name="wave_size" value="1">2</input>
+        <input type="radio" name="wave_size" value="2">4</input>
+        <input type="radio" name="wave_size" value="4" checked>8</input>
+        <input type="radio" name="wave_size" value="8">16</input>
+    </div>
+    <div id="container">
+        <div id="background"><canvas id="drawing"></canvas></div>
+        <div id="foreground"></div>
+    </div>
+
+</body>
+<script type="text/javascript" src="../js/build/splash.js"></script>
+</html>

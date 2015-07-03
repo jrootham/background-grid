@@ -6,11 +6,21 @@
  * Copyright © 2014 Jim Rootham
  */
 
+var darkTick = parseInt($('input[name="dark"]:checked').val());
+$('input[type=radio][name=dark]').change(
+    function() {
+        darkTick = parseInt(this.value);
+    });
+
+var lightTick = parseInt($('input[name="light"]:checked').val());
+$('input[type=radio][name=light]').change(
+    function() {
+        lightTick = parseInt(this.value);
+    });
+
 function setColour(previous, current, size, inputs) {
     let newColour = new RGBA(255, 255, 255);
 
-    let darkTick = parseInt($('input[name="dark"]:checked').val());
-    let lightTick = parseInt($('input[name="light"]:checked').val());
 
     let mousePosition = inputs.getMousePosition();
     if (previous) {
@@ -42,4 +52,4 @@ var specArray = [
     }
 ]
 
-action(specArray, $('#drawing'), $('#foreground'));
+action(specArray, $('#drawing'), $('#foreground'), 50);

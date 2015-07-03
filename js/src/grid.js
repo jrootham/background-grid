@@ -141,7 +141,7 @@ class Inputs {
         this.time++;
 
         if (this.mouseDown) {
-            this.downtime++;
+            this.downTime++;
         }
 
         if (this.mouseUp) {
@@ -280,24 +280,22 @@ class Grid {
 }
 
 
-function action(specArray, canvas, foreground) {
+function action(specArray, canvas, foreground, interval) {
     let spec = getSpec(specArray, canvas);
     let grid = new Grid(spec, canvas, foreground);
     let inputs = new Inputs(foreground, grid);
     grid.show(inputs);
 
+    $(window).resize(event => {
+        spec= getSpec(specArray, canvas);
+        grid = new Grid(spec, canvas, foreground);
+        inputs.change(grid);
+    });
+
     setInterval(function() {
-        let spec = getSpec(specArray, canvas);
-
-        if (grid.changed(spec, canvas)) {
-            grid = new Grid(spec, canvas, foreground);
-            inputs.change(grid);
-        }
-
         grid.show(inputs);
-
         inputs.clock();
-    }, 10);
+    }, interval);
 }
 
 function getSpec(specArray, canvas) {
