@@ -141,7 +141,8 @@ Conditions function
 Size functions
 
     constantSize(rows, columns)         // Constant size    
-    constantElementSize(elementWidth, elementHeight)    // Size that results in element size 
+    constantElementSize(elementWidth, elementHeight)    // Grid size that results 
+                                        // in approximate element size 
 
 Border size functions 
 
