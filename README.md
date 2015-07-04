@@ -44,6 +44,7 @@ The spec object is a javascript object that is an array of objects of the follow
         }
     }
 
+
     conditionFn(parentWidth, parentHeight) 
 argument|meaning
 -------|-------
@@ -94,7 +95,9 @@ blue|0-blue red component|rgba.blue
 alpha|0.0-1.0 transparency factor (default 1.0, opaque)|rgba.alpha
 
 Index
+
 Holds a row column pair (may be floating point)
+
 Below, other refers to another Index object
 
     index = new Index (row, column)     // Create new index 
@@ -105,9 +108,43 @@ Below, other refers to another Index object
     index.floor()                       // Sets row and column to next lower integer
     index.ceiling()                     // Sets row and column to next higher integer
     index.round()                       // Sets row and column to closest integer
+    index.row                           // Row value
+    index.column                        // Column value
 
-a|b
--------|-------
-foo|bar
+Inputs
+
+The current inputs
+
+    inputs.getMousePosition()           // Index of current mouse position
+    inputs.getDownPosition()            // Index of mouse position when the button was pressed
+    inputs.isMouseDown()                // true if button is down, false otherwise
+    inputs.isMouseUp()                  // true if button is up after being down, false otherwise
+    inputs.getTimeSinceDown()           // Number of clock ticks since the button was pressed
+    inputs.getTimeSinceUp()             // Number of clock ticks since the button was released
+    inputs.getTime()                    // Number of clock ticks since the page was loaded
+    
+The getMousePosition and getDownPosition may return undefined when the mouse is not over the foreground or the mouse button has not been pressed.  This requires that the use of these inputs be protected.  For example:
+
+    let position = inputs.getMousePosition() 
+    if (position) {
+        // Do something
+    }
+    
 ### Convenience Functions
 
+All of these functions return functions with the correct signature for their context.
+
+Conditions function
+
+    always(parentWidth, parentHeight)   // Always true, last condition in specArray
+
+Size functions
+
+    constantSize(rows, columns)         // Constant size    
+    constantElementSize(elementWidth, elementHeight)    // Size that results in element size 
+
+Border size functions 
+
+    constantBorder(size)                // Constant border size
+    widthPercentageBorder(percent)      // Border size as percentage of width
+    heightPercentageBorder(percent)     // Border size as percentage of height
