@@ -20,6 +20,13 @@ $('input[type=radio][name=scale]').change(
         scale = parseInt(this.value);
     });
 
+var speed = parseInt($("input[name=speed]:checked").val());
+
+$('input[type=radio][name=speed]').change(
+    function() {
+        speed = parseInt(this.value);
+    });
+
 var rowFactor = parseFloat($("input[name=row_factor]:checked").val());
 
 $('input[type=radio][name=row_factor]').change(
@@ -41,7 +48,7 @@ function setColour(previous, current, size, inputs) {
     return RGBA(
         0,
         128,
-        255 * factor *  ((1 + - Math.cos((range - inputs.getTime()) / scale)) / 2)
+        255 * factor *  ((1 + - Math.cos((range - (inputs.getTime() / speed)) / scale)) / 2)
     );
 }
 
@@ -49,7 +56,7 @@ var specArray = [
     {
         condition: always,
         spec: {
-            size: constantElementSize(10, 10) ,
+            size: constantElementSize(20, 20) ,
             borderWidth: constantBorder(0),
             borderColour: RGBA(128, 128, 128),
             setColour: setColour

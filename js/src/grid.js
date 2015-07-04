@@ -215,7 +215,7 @@ class Grid {
         this.ctx.canvas.width = this.width;
         this.ctx.canvas.height = this.height;
 
-        this.ctx.strokeStyle = rgba(spec.borderColour);
+        this.ctx.strokeStyle = spec.borderColour.rgba();
         this.ctx.lineWidth = this.borderWidth;
         this.offset = this.borderWidth / 2;
 
