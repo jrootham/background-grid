@@ -19,18 +19,18 @@ $('input[type=radio][name=light]').change(
     });
 
 function setColour(previous, current, size, inputs) {
-    let newColour = new RGBA(255, 255, 255);
+    let newColour = RGBA(255, 255, 255);
 
 
     let mousePosition = inputs.getMousePosition();
     if (previous) {
         if (mousePosition && mousePosition.row === current.row && mousePosition.column === current.column) {
-            newColour = new RGBA(
+            newColour = RGBA(
                 Math.max(0, previous.red - darkTick),
                 Math.max(0, previous.green - darkTick),
                 Math.max(0, previous.blue - darkTick));
         } else {
-            newColour = new RGBA(
+            newColour = RGBA(
                 Math.min(255, previous.red + lightTick),
                 Math.min(255, previous.green + lightTick),
                 Math.min(255, previous.blue + lightTick));
@@ -46,7 +46,7 @@ var specArray = [
         spec: {
             size: constantSize(5, 5),
             borderWidth: constantBorder(0),
-            borderColour: new RGBA(128, 128, 128),
+            borderColour: RGBA(128, 128, 128),
             setColour: setColour
         }
     }

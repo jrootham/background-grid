@@ -34,7 +34,7 @@ function setColour(previous, current, size, inputs) {
         }
     }
 
-    return new RGBA(255,255, 255, transparent);
+    return RGBA(255,255, 255, transparent);
 }
 
 var specArray = [
@@ -43,7 +43,7 @@ var specArray = [
         spec: {
             size: constantElementSize(10, 10),
             borderWidth: constantBorder(0),
-            borderColour: new RGBA(128, 128, 128),
+            borderColour: RGBA(128, 128, 128),
             setColour: setColour
         }
     },
@@ -52,7 +52,7 @@ var specArray = [
         spec: {
             size: constantElementSize(10, 10),
             borderWidth: constantBorder(0),
-            borderColour: new RGBA(128, 128, 128),
+            borderColour: RGBA(128, 128, 128),
             setColour: setColour
         }
     },
@@ -61,7 +61,7 @@ var specArray = [
         spec: {
             size: constantElementSize(10, 10),
             borderWidth: constantBorder(0),
-            borderColour: new RGBA(128, 128, 128),
+            borderColour: RGBA(128, 128, 128),
             setColour: setColour
         }
     }

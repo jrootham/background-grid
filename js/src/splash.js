@@ -49,7 +49,7 @@ function setColour(previous, current, size, inputs) {
         red = 255 * factor;
     }
 
-    return new RGBA(red, 0 , blue);
+    return RGBA(red, 0 , blue);
 }
 
 var specArray = [
@@ -58,7 +58,7 @@ var specArray = [
         spec: {
             size: constantElementSize(10, 10),
             borderWidth: constantBorder(0),
-            borderColour: new RGBA(128, 128, 128),
+            borderColour: RGBA(128, 128, 128),
             setColour: setColour
         }
     }

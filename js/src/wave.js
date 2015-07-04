@@ -38,7 +38,7 @@ function setColour(previous, current, size, inputs) {
     let range = current.distance(size.multiply(new Index(rowFactor, columnFactor)));
     let factor = (maxRange - range) / maxRange;
 
-    return new RGBA(
+    return RGBA(
         0,
         128,
         255 * factor *  ((1 + - Math.cos((range - inputs.getTime()) / scale)) / 2)
@@ -51,10 +51,10 @@ var specArray = [
         spec: {
             size: constantElementSize(10, 10) ,
             borderWidth: constantBorder(0),
-            borderColour: new RGBA(128, 128, 128),
+            borderColour: RGBA(128, 128, 128),
             setColour: setColour
         }
     }
 ]
 
-action(specArray, $('#drawing'), $('#foreground'), 40);
+action(specArray, $('#drawing'), $('#foreground'), 30);

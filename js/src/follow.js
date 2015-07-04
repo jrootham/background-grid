@@ -39,7 +39,7 @@ function setColour(previous, current, size, inputs) {
         }
     }
 
-    return new RGBA(
+    return RGBA(
         red,
         Math.floor(255 * current.row / size.row),
         Math.floor(255 * current.column / size.column)
@@ -52,7 +52,7 @@ var specArray = [
         spec: {
             size: constantSize(40, 80),
             borderWidth: constantBorder(5),
-            borderColour: new RGBA(128, 128, 128),
+            borderColour: RGBA(128, 128, 128),
             setColour: setColour
         }
     },
@@ -61,7 +61,7 @@ var specArray = [
         spec: {
             size: constantSize(20, 40),
             borderWidth: constantBorder(3),
-            borderColour: new RGBA(128, 128, 128),
+            borderColour: RGBA(128, 128, 128),
             setColour: setColour
         }
     },
@@ -70,7 +70,7 @@ var specArray = [
         spec: {
             size: constantSize(10, 20),
             borderWidth: constantBorder(1),
-            borderColour: new RGBA(128, 128, 128),
+            borderColour: RGBA(128, 128, 128),
             setColour: setColour
         }
     }

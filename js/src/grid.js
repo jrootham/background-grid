@@ -34,25 +34,26 @@ function clip(number) {
 }
 
 
-class RGBA {
-    constructor(red, green, blue, alpha = 1.0)
-    {
-        this.red = red;
-        this.green = green;
-        this.blue = blue;
-        this.alpha = alpha;
+function RGBA(red, green, blue, alpha = 1.0)
+{
+    return {
+        red: red,
+        green: green,
+        blue: blue,
+        alpha: alpha
     }
+}
 
-    rgba() {
-        return `rgba(${clip(this.red)}, ${clip(this.green)}, ${clip(this.blue)}, ${this.alpha})`;
-    }
-    equals(other) {
-        return other
-            && this.red === other.red
-            && this.green === other.green
-            && this.blue === other.blue
-            && this.alpha === other.alpha;
-    }
+function rgba(colour) {
+    return `rgba(${clip(colour.red)}, ${clip(colour.green)}, ${clip(colour.blue)}, ${colour.alpha})`;
+}
+
+function RgbaEquals(me, other) {
+    return other
+        && me.red === other.red
+        && me.green === other.green
+        && me.blue === other.blue
+        && me.alpha === other.alpha;
 }
 
 class Index {
@@ -214,7 +215,7 @@ class Grid {
         this.ctx.canvas.width = this.width;
         this.ctx.canvas.height = this.height;
 
-        this.ctx.strokeStyle = spec.borderColour.rgba();
+        this.ctx.strokeStyle = rgba(spec.borderColour);
         this.ctx.lineWidth = this.borderWidth;
         this.offset = this.borderWidth / 2;
 
@@ -229,10 +230,10 @@ class Grid {
                 let oldColour = this.colourArray[row][column];
 
                 let newColour = setColour(oldColour, here, this.size, inputs);
-                if (!newColour.equals(oldColour)) {
+                if (!RgbaEquals(newColour, oldColour)) {
                     this.colourArray[row][column] = newColour;
 
-                    this.ctx.fillStyle = newColour.rgba();
+                    this.ctx.fillStyle = rgba(newColour);
                     let rect = this.makeRectangle(this.ctx,
                         Math.floor(this.offset + column * this.elementWidth),
                         Math.floor(this.offset + row * this.elementHeight),
