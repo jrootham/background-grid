@@ -80,19 +80,31 @@ current|Index object, the row and column of this grid element
 size|Index object, the size of the grid
 inputs|Inputs object, the current inputs
 
+Returns an RGBA object, the new colour of the relevant grid element
+
 ### Objects
 
     rgba = RGBA(red,blue,green)
+    
 argument|meaning|reference
--------|-------|--
+-------|-------|-------
 red|0-255 red component|rgba.red
 green|0-255 green component|rgba.green
 blue|0-blue red component|rgba.blue
 alpha|0.0-1.0 transparency factor (default 1.0, opaque)|rgba.alpha
 
-
-
 Index
+Holds a row column pair (may be floating point)
+Below, other refers to another Index object
+
+    index = new Index (row, column)     // Create new index 
+    index.distance(other)               // Compute distance between Indexes
+    index.multiply(other)               // Multiply row by row and column by column
+    index.divide(other)                 // Divide row by row and column by column
+    index.equals(other)                 // Returns true if equal
+    index.floor()                       // Sets row and column to next lower integer
+    index.ceiling()                     // Sets row and column to next higher integer
+    index.round()                       // Sets row and column to closest integer
 
 a|b
 -------|-------
