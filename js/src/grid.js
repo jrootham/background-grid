@@ -34,7 +34,7 @@ function clip(number) {
 }
 
 
-function RGBA(red, green, blue, alpha = 1.0)
+function RGBA(red = 255, green = 255, blue = 255, alpha = 1.0)
 {
     return {
         red: red,
@@ -42,6 +42,13 @@ function RGBA(red, green, blue, alpha = 1.0)
         blue: blue,
         alpha: alpha
     }
+}
+
+function RgbaAssign(to, from) {
+    to.red = from.red;
+    to.green = from.green;
+    to.blue = from.blue;
+    to.alpha = from.alpha;
 }
 
 function rgba(colour) {
@@ -201,7 +208,8 @@ class Grid {
             colourArray[row] = [];
 
             for (let column = 0; column < this.size.column; column++) {
-                colourArray[row][column] = undefined;
+                colourArray[row][column] = RGBA(255, 255, 255, 0.0);
+                ;
             }
         }
 
@@ -215,7 +223,7 @@ class Grid {
         this.ctx.canvas.width = this.width;
         this.ctx.canvas.height = this.height;
 
-        this.ctx.strokeStyle = spec.borderColour.rgba();
+        this.ctx.strokeStyle = rgba(spec.borderColour);
         this.ctx.lineWidth = this.borderWidth;
         this.offset = this.borderWidth / 2;
 
@@ -224,32 +232,37 @@ class Grid {
     }
 
     show(inputs) {
+        let newColour = RGBA(255, 255, 255, 1.0);
+
         for (var row = 0 ; row < this.size.row ; row++) {
             for (var column = 0 ; column < this.size.column ; column++) {
                 let here = new Index(row, column);
                 let oldColour = this.colourArray[row][column];
 
-                let newColour = setColour(oldColour, here, this.size, inputs);
+                setColour(oldColour, here, this.size, inputs, newColour);
                 if (!RgbaEquals(newColour, oldColour)) {
-                    this.colourArray[row][column] = newColour;
-
-                    this.ctx.fillStyle = rgba(newColour);
-                    let rect = this.makeRectangle(this.ctx,
-                        Math.floor(this.offset + column * this.elementWidth),
-                        Math.floor(this.offset + row * this.elementHeight),
-                        Math.floor(this.offset + (column + 1) * this.elementWidth),
-                        Math.floor(this.offset + (row + 1) * this.elementHeight));
-
-                    this.ctx.clearRect(rect.x, rect.y, rect.w, rect.h);
-                    this.ctx.fill();
-                    if (this.borderWidth > 0) {
-                        this.ctx.stroke();
-                    }
+                    RgbaAssign(this.colourArray[row][column], newColour);
+                    this.draw(column, row, newColour);
                 }
-
             }
         }
     }
+
+    draw(column, row, newColour) {
+        this.ctx.fillStyle = rgba(newColour);
+        let rect = this.makeRectangle(this.ctx,
+            Math.floor(this.offset + column * this.elementWidth),
+            Math.floor(this.offset + row * this.elementHeight),
+            Math.floor(this.offset + (column + 1) * this.elementWidth),
+            Math.floor(this.offset + (row + 1) * this.elementHeight));
+
+        this.ctx.clearRect(rect.x, rect.y, rect.w, rect.h);
+        this.ctx.fill();
+        if (this.borderWidth > 0) {
+            this.ctx.stroke();
+        }
+    }
+
 
     // makeRectangle both returns and has side effects
 

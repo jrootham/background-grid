@@ -41,15 +41,14 @@ $('input[type=radio][name=column_factor]').change(
         columnFactor = parseFloat(this.value);
     });
 
-function setColour(previous, current, size, inputs) {
+function setColour(previous, current, size, inputs, newColour) {
     let range = current.distance(size.multiply(new Index(rowFactor, columnFactor)));
     let factor = (maxRange - range) / maxRange;
 
-    return RGBA(
-        0,
-        128,
-        255 * factor *  ((1 + - Math.cos((range - (inputs.getTime() / speed)) / scale)) / 2)
-    );
+    newColour.red = 0;
+    newColour.green = 128;
+    newColour.blue = 255 * factor *  ((1 + - Math.cos((range - (inputs.getTime() / speed)) / scale)) / 2);
+    newColour.alpha = 1.0;
 }
 
 var specArray = [

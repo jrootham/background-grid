@@ -21,7 +21,7 @@ $('input[type=radio][name=size]').change(
         radius = parseInt(this.value);
     });
 
-function setColour(previous, current, size, inputs) {
+function setColour(previous, current, size, inputs, newColour) {
     let position = inputs.getMousePosition();
 
     let transparent = 1.0;
@@ -34,7 +34,7 @@ function setColour(previous, current, size, inputs) {
         }
     }
 
-    return RGBA(255,255, 255, transparent);
+    newColour.alpha = transparent;
 }
 
 var specArray = [

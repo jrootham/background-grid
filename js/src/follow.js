@@ -21,9 +21,9 @@ $('input[type=radio][name=size]').change(
     });
 
 
-function setColour(previous, current, size, inputs) {
-
+function setColour(previous, current, size, inputs, newColour) {
     var red = 100;
+
     if (current.row <= size.row / 2 && current.column <= size.column / 2)
     {
         red = 0;
@@ -39,11 +39,10 @@ function setColour(previous, current, size, inputs) {
         }
     }
 
-    return RGBA(
-        red,
-        Math.floor(255 * current.row / size.row),
-        Math.floor(255 * current.column / size.column)
-    );
+    newColour.red = red;
+    newColour.green = Math.floor(255 * current.row / size.row);
+    newColour.blue = Math.floor(255 * current.column / size.column);
+    newColour.alpha = 1.0;
 }
 
 var specArray = [

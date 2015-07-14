@@ -26,7 +26,7 @@ $('input[type=radio][name=wave_size]').change(
         waveSize = parseFloat(this.value);
     });
 
-function setColour(previous, current, size, inputs) {
+function setColour(previous, current, size, inputs, newColour) {
     let red = 0;
     let blue = 255;
 
@@ -49,7 +49,10 @@ function setColour(previous, current, size, inputs) {
         red = 255 * factor;
     }
 
-    return RGBA(red, 0 , blue);
+    newColour.red = red;
+    newColour.green = 0;
+    newColour.blue = blue
+    newColour.alpha = 1.0;
 }
 
 var specArray = [

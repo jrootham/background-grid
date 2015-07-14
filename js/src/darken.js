@@ -18,26 +18,27 @@ $('input[type=radio][name=light]').change(
         lightTick = parseInt(this.value);
     });
 
-function setColour(previous, current, size, inputs) {
-    let newColour = RGBA(255, 255, 255);
+function setColour(previous, current, size, inputs, newColour) {
+    newColour.red = 255;
+    newColour.green = 255;
+    newColour.blue = 255;
+    newColour.alpha = 1.0;
 
 
     let mousePosition = inputs.getMousePosition();
-    if (previous) {
+    if (previous.alpha != 0.0) {
         if (mousePosition && mousePosition.row === current.row && mousePosition.column === current.column) {
-            newColour = RGBA(
-                Math.max(0, previous.red - darkTick),
-                Math.max(0, previous.green - darkTick),
-                Math.max(0, previous.blue - darkTick));
+            newColour.red = Math.max(0, previous.red - darkTick);
+            newColour.green = Math.max(0, previous.green - darkTick);
+            newColour.blue = Math.max(0, previous.blue - darkTick);
+
+            console.log(previous, newColour);
         } else {
-            newColour = RGBA(
-                Math.min(255, previous.red + lightTick),
-                Math.min(255, previous.green + lightTick),
-                Math.min(255, previous.blue + lightTick));
+            newColour.red = Math.min(255, previous.red + lightTick);
+            newColour.green = Math.min(255, previous.green + lightTick);
+            newColour.blue = Math.min(255, previous.blue + lightTick);
         }
     }
-
-    return newColour;
 }
 
 var specArray = [
