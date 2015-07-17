@@ -72,7 +72,7 @@ Returns the width of the border in pixels.
 
 borderColour is the colour of the border (see RGBA below for the meaning)
 
-    setColourFn(previous, current, size, inputs)
+    setColourFn(previous, current, size, inputs, newColour)
     
 argument|meaning
 -------|-------
@@ -80,8 +80,9 @@ previous|RGBA object, the previous colour of this grid element
 current|Index object, the row and column of this grid element
 size|Index object, the size of the grid
 inputs|Inputs object, the current inputs
+newColour|output RGBA object
 
-Returns an RGBA object, the new colour of the relevant grid element
+Sets an RGBA object, the new colour of the relevant grid element
 
 ### Objects
 
