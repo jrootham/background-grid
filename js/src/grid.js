@@ -102,9 +102,10 @@ class Index {
 }
 
 class Inputs {
-    constructor(foreground, grid) {
+    constructor(foreground, background) {
         this.foreground = foreground;
-        this.change(grid);
+        this.grid = background;
+        this.change(background);
 
         this.mousePosition = undefined;
         this.downPosition = undefined;
@@ -115,7 +116,7 @@ class Inputs {
         this.time = 0;
 
         this.foreground.mousemove(event => {
-            this.mousePosition = this.saveMouse(event);
+            this.mousePosition = this.saveMouse(background, event);
         });
 
         this.foreground.mouseleave(event => {
@@ -130,7 +131,7 @@ class Inputs {
             this.upTime = 0;
             this.mouseDown = true;
             this.mouseUp = false;
-            this.downPosition = this.saveMouse(event);
+            this.downPosition = this.saveMouse(background, event);
         });
 
         this.foreground.mouseup(event => {
@@ -157,7 +158,7 @@ class Inputs {
         }
     }
 
-    saveMouse(event) {
+    saveMouse(background, event) {
         let location = this.foreground.offset();
         let x = event.pageX - location.left;
         let y = event.pageY - location.top;
@@ -196,24 +197,14 @@ class Inputs {
     }
 }
 
-class Grid {
+class Background {
     constructor(spec, canvas, foreground) {
         this.spec = spec;
         this.borderColour = spec.borderColour;
         this.borderWidth = spec.borderWidth(canvas.width(), canvas.height());
         this.size = spec.size(canvas.width(), canvas.height(), this.borderWidth);
 
-        let colourArray = [];
-        for (let row = 0 ; row < this.size.row ; row++) {
-            colourArray[row] = [];
-
-            for (let column = 0; column < this.size.column; column++) {
-                colourArray[row][column] = RGBA(255, 255, 255, 0.0);
-                ;
-            }
-        }
-
-        this.colourArray = colourArray;
+        this.colourArray = this.makeColourArray();
 
         this.ctx = canvas[0].getContext("2d");
 
@@ -226,16 +217,14 @@ class Grid {
         this.ctx.strokeStyle = rgba(spec.borderColour);
         this.ctx.lineWidth = this.borderWidth;
         this.offset = this.borderWidth / 2;
-
-        this.elementWidth = (this.width - this.borderWidth) / this.size.column;
-        this.elementHeight = (this.height - this.borderWidth) / this.size.row;
+        this.makeElementSizes();
     }
 
     show(inputs) {
         let newColour = RGBA(255, 255, 255, 1.0);
 
-        for (var row = 0 ; row < this.size.row ; row++) {
-            for (var column = 0 ; column < this.size.column ; column++) {
+        for (var row = 0 ; row < this.colourArray.length ; row++) {
+            for (var column = 0 ; column < this.colourArray[row].length ; column++) {
                 let here = new Index(row, column);
                 let oldColour = this.colourArray[row][column];
 
@@ -246,6 +235,41 @@ class Grid {
                 }
             }
         }
+    }
+
+    changed(spec, canvas) {
+        let newBorder = spec.borderWidth(canvas.width(), canvas.height());
+        let newSize = spec.size(canvas.width(), canvas.height(), newBorder);
+
+        return (
+            !this.size.equals(newSize) ||
+            this.borderWidth != newBorder ||
+            !this.borderColour.equals(spec.borderColour));
+    }
+}
+
+class Grid extends Background {
+    constructor(spec, canvas, foreground) {
+        super(spec, canvas, foreground);
+    }
+
+    makeElementSizes() {
+        this.elementWidth = (this.width - this.borderWidth) / this.size.column;
+        this.elementHeight = (this.height - this.borderWidth) / this.size.row;
+    }
+
+    makeColourArray() {
+        let colourArray = [];
+        for (let row = 0 ; row < this.size.row ; row++) {
+            colourArray[row] = [];
+
+            for (let column = 0; column < this.size.column; column++) {
+                colourArray[row][column] = RGBA(255, 255, 255, 0.0);
+                ;
+            }
+        }
+
+        return colourArray;
     }
 
     draw(column, row, newColour) {
@@ -282,21 +306,86 @@ class Grid {
         }
     }
 
-    changed(spec, canvas) {
-        let newBorder = spec.borderWidth(canvas.width(), canvas.height());
-        let newSize = spec.size(canvas.width(), canvas.height(), newBorder);
-
-        return (
-            !this.size.equals(newSize) ||
-            this.borderWidth != newBorder ||
-            !this.borderColour.equals(spec.borderColour));
-    }
 }
 
+class Triangle extends Background {
+    constructor(spec, canvas, foreground) {
+        super(spec, canvas, foreground);
+    }
 
-function action(specArray, canvas, foreground, interval) {
+    makeElementSizes() {
+        this.elementHeight = (this.height - this.borderWidth) / this.size.row;
+        this.elementWidth = (this.width - this.borderWidth) / (this.size.row * 2);
+    }
+
+    makeColourArray() {
+        let colourArray = [];
+        for (let row = 0 ; row < this.size.row ; row++) {
+            colourArray[row] = [];
+
+            for (let column = 0; column < 2 * row + 1 ; column++) {
+                colourArray[row][column] = RGBA(255, 255, 255, 0.0);
+                ;
+            }
+        }
+
+        return colourArray;
+    }
+
+    draw(column, row, newColour) {
+        this.ctx.fillStyle = rgba(newColour);
+
+        let top = Math.floor(this.offset + row * this.elementHeight);
+        let bottom = Math.floor(this.offset + (row + 1) * this.elementHeight);
+        let startY, endY;
+
+        let position = (this.size.row - row) + column - 1;
+
+        if (column % 2 === 0) {
+            startY = top;
+            endY = bottom;
+        }
+        else {
+            startY = bottom;
+            endY = top;
+        }
+
+        let triangle = this.makeTriangle(this.ctx,
+            Math.floor(this.offset + position * this.elementWidth),
+            startY,
+            Math.floor(this.offset + (position + 2) * this.elementWidth),
+            endY);
+
+//        this.ctx.clearRect(rect.x, rect.y, rect.w, rect.h);
+        this.ctx.fill();
+        if (this.borderWidth > 0) {
+            this.ctx.stroke();
+        }
+    }
+
+
+    // makeRectangle both returns and has side effects
+
+    makeTriangle(ctx, startX, startY, endX, endY) {
+        ctx.beginPath();
+        ctx.moveTo(startX + (endX - startX) / 2, startY);
+        ctx.lineTo(startX, endY);
+        ctx.lineTo(endX, endY);
+        ctx.closePath();
+
+        return {
+            x : startX,
+            y : startY,
+            w : endX - startX,
+            h : endY - startY
+        }
+    }
+
+}
+
+function action(specArray, canvas, foreground, interval, shape = Grid) {
     let spec = getSpec(specArray, canvas);
-    let grid = new Grid(spec, canvas, foreground);
+    let grid = new shape(spec, canvas, foreground);
     let inputs = new Inputs(foreground, grid);
     grid.show(inputs);
 
