@@ -104,7 +104,7 @@ class Index {
 class Inputs {
     constructor(foreground, background) {
         this.foreground = foreground;
-        this.grid = background;
+        this.background = background;
         this.change(background);
 
         this.mousePosition = undefined;
@@ -116,7 +116,7 @@ class Inputs {
         this.time = 0;
 
         this.foreground.mousemove(event => {
-            this.mousePosition = this.saveMouse(background, event);
+            this.mousePosition = this.saveMouse(this.background, event);
         });
 
         this.foreground.mouseleave(event => {
@@ -131,7 +131,7 @@ class Inputs {
             this.upTime = 0;
             this.mouseDown = true;
             this.mouseUp = false;
-            this.downPosition = this.saveMouse(background, event);
+            this.downPosition = this.saveMouse(this.background, event);
         });
 
         this.foreground.mouseup(event => {
@@ -162,10 +162,7 @@ class Inputs {
         let location = this.foreground.offset();
         let x = event.pageX - location.left;
         let y = event.pageY - location.top;
-        return new Index(
-            Math.floor(Math.max(y - this.offset, 0) / this.elementHeight),
-            Math.floor(Math.max(x - this.offset, 0) / this.elementWidth)
-        )
+        return background.mapMouse(x, y);
     }
 
     getMousePosition() {
@@ -220,23 +217,6 @@ class Background {
         this.makeElementSizes();
     }
 
-    show(inputs) {
-        let newColour = RGBA(255, 255, 255, 1.0);
-
-        for (var row = 0 ; row < this.colourArray.length ; row++) {
-            for (var column = 0 ; column < this.colourArray[row].length ; column++) {
-                let here = new Index(row, column);
-                let oldColour = this.colourArray[row][column];
-
-                setColour(oldColour, here, this.size, inputs, newColour);
-                if (!RgbaEquals(newColour, oldColour)) {
-                    RgbaAssign(this.colourArray[row][column], newColour);
-                    this.draw(column, row, newColour);
-                }
-            }
-        }
-    }
-
     changed(spec, canvas) {
         let newBorder = spec.borderWidth(canvas.width(), canvas.height());
         let newSize = spec.size(canvas.width(), canvas.height(), newBorder);
@@ -270,6 +250,23 @@ class Grid extends Background {
         }
 
         return colourArray;
+    }
+
+    show(inputs) {
+        let newColour = RGBA(255, 255, 255, 1.0);
+
+        for (var row = 0 ; row < this.colourArray.length ; row++) {
+            for (var column = 0 ; column < this.colourArray[row].length ; column++) {
+                let here = new Index(row, column);
+                let oldColour = this.colourArray[row][column];
+
+                setColour(oldColour, here, this.size, inputs, newColour);
+                if (!RgbaEquals(newColour, oldColour)) {
+                    RgbaAssign(this.colourArray[row][column], newColour);
+                    this.draw(column, row, newColour);
+                }
+            }
+        }
     }
 
     draw(column, row, newColour) {
@@ -306,6 +303,12 @@ class Grid extends Background {
         }
     }
 
+    mapMouse(x, y) {
+        return new Index(
+            Math.floor(Math.max(y - this.offset, 0) / this.elementHeight),
+            Math.floor(Math.max(x - this.offset, 0) / this.elementWidth)
+        )
+    }
 }
 
 class Triangle extends Background {
@@ -323,13 +326,29 @@ class Triangle extends Background {
         for (let row = 0 ; row < this.size.row ; row++) {
             colourArray[row] = [];
 
-            for (let column = 0; column < 2 * row + 1 ; column++) {
+            for (let column = 0; column < 2 * this.size.row - 1; column++) {
                 colourArray[row][column] = RGBA(255, 255, 255, 0.0);
-                ;
             }
         }
 
         return colourArray;
+    }
+
+    show(inputs) {
+        let newColour = RGBA(255, 255, 255, 1.0);
+
+        for (var row = 0 ; row < this.colourArray.length ; row++) {
+            for (var column = this.size.row - (row + 1) ; column < this.size.row + row ; column++) {
+                let here = new Index(row, column);
+                let oldColour = this.colourArray[row][column];
+
+                setColour(oldColour, here, this.size, inputs, newColour);
+                if (!RgbaEquals(newColour, oldColour)) {
+                    RgbaAssign(this.colourArray[row][column], newColour);
+                    this.draw(column, row, newColour);
+                }
+            }
+        }
     }
 
     draw(column, row, newColour) {
@@ -341,7 +360,7 @@ class Triangle extends Background {
 
         let position = (this.size.row - row) + column - 1;
 
-        if (column % 2 === 0) {
+        if (this.upright(row, column)) {
             startY = top;
             endY = bottom;
         }
@@ -351,9 +370,9 @@ class Triangle extends Background {
         }
 
         let triangle = this.makeTriangle(this.ctx,
-            Math.floor(this.offset + position * this.elementWidth),
+            Math.floor(this.offset + column * this.elementWidth),
             startY,
-            Math.floor(this.offset + (position + 2) * this.elementWidth),
+            Math.floor(this.offset + (column + 2) * this.elementWidth),
             endY);
 
 //        this.ctx.clearRect(rect.x, rect.y, rect.w, rect.h);
@@ -364,7 +383,7 @@ class Triangle extends Background {
     }
 
 
-    // makeRectangle both returns and has side effects
+    // makeTriangle both returns and has side effects
 
     makeTriangle(ctx, startX, startY, endX, endY) {
         ctx.beginPath();
@@ -381,22 +400,51 @@ class Triangle extends Background {
         }
     }
 
+    mapMouse(x, y) {
+        let row = Math.floor(Math.max(y - this.offset, 0) / this.elementHeight);
+        let column = Math.floor(Math.max(x - this.offset, 0) / this.elementWidth);
+        let dy = y - row * this.elementHeight;
+        let dx = x - column * this.elementWidth;
+
+        if (this.upright(row, column)) {
+            let point = (-this.elementHeight / this.elementWidth) * dx + this.elementHeight;
+            column = column - (dy < point ? 1 : 0);
+        }
+        else {
+            let point = (this.elementHeight / this.elementWidth) * dx;
+            column = column - (dy > point ? 1 : 0);
+        }
+
+        let mouse = undefined;
+        let leftEdge = this.size.row - (row + 1);
+        let rightEdge = this.size.row + row;
+
+        if (column >= leftEdge && column <= rightEdge) {
+            mouse = new Index(row, column);
+        }
+
+        return mouse;
+    }
+
+    upright(row, column) {
+        return (row + column) % 2 != (this.size.row % 2)
+    }
 }
 
 function action(specArray, canvas, foreground, interval, shape = Grid) {
     let spec = getSpec(specArray, canvas);
-    let grid = new shape(spec, canvas, foreground);
-    let inputs = new Inputs(foreground, grid);
-    grid.show(inputs);
+    let backgound = new shape(spec, canvas, foreground);
+    let inputs = new Inputs(foreground, backgound);
+    backgound.show(inputs);
 
     $(window).resize(event => {
         spec= getSpec(specArray, canvas);
-        grid = new Grid(spec, canvas, foreground);
-        inputs.change(grid);
+        backgound = new shape(spec, canvas, foreground);
+        inputs.change(backgound);
     });
 
     setInterval(function() {
-        grid.show(inputs);
+        backgound.show(inputs);
         inputs.clock();
     }, interval);
 }
