@@ -35,7 +35,7 @@ var specArray = [
     {
         condition: always,
         spec: {
-            size: constantSize(20, 5),
+            size: constantSize(20, 20),
             borderWidth: constantBorder(3),
             borderColour: RGBA(200, 200, 200),
             setColour: setColour

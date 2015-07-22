@@ -318,7 +318,7 @@ class Triangle extends Background {
 
     makeElementSizes() {
         this.elementHeight = (this.height - this.borderWidth) / this.size.row;
-        this.elementWidth = (this.width - this.borderWidth) / (this.size.row * 2);
+        this.elementWidth = (this.width - this.borderWidth) / this.size.column;
     }
 
     makeColourArray() {
@@ -326,7 +326,7 @@ class Triangle extends Background {
         for (let row = 0 ; row < this.size.row ; row++) {
             colourArray[row] = [];
 
-            for (let column = 0; column < 2 * this.size.row - 1; column++) {
+            for (let column = 0; column < 2 * this.size.column ; column++) {
                 colourArray[row][column] = RGBA(255, 255, 255, 0.0);
             }
         }
@@ -338,7 +338,7 @@ class Triangle extends Background {
         let newColour = RGBA(255, 255, 255, 1.0);
 
         for (var row = 0 ; row < this.colourArray.length ; row++) {
-            for (var column = this.size.row - (row + 1) ; column < this.size.row + row ; column++) {
+            for (var column = 0 ; column < this.size.column * 2 ; column++) {
                 let here = new Index(row, column);
                 let oldColour = this.colourArray[row][column];
 
@@ -354,26 +354,19 @@ class Triangle extends Background {
     draw(column, row, newColour) {
         this.ctx.fillStyle = rgba(newColour);
 
+        let position = (column - column % 2) / 2;
+
+        let left = Math.floor(this.offset + (position * this.elementWidth));
+        let right = Math.floor(this.offset + (position + 1) * this.elementWidth);
         let top = Math.floor(this.offset + row * this.elementHeight);
         let bottom = Math.floor(this.offset + (row + 1) * this.elementHeight);
-        let startY, endY;
 
-        let position = (this.size.row - row) + column - 1;
-
-        if (this.upright(row, column)) {
-            startY = top;
-            endY = bottom;
+        if (column % 2 === 0) {
+            let triangle = this.makeTriangle(this.ctx, left, top, right, bottom);
         }
         else {
-            startY = bottom;
-            endY = top;
+            let triangle = this.makeTriangle(this.ctx, right, bottom, left, top);
         }
-
-        let triangle = this.makeTriangle(this.ctx,
-            Math.floor(this.offset + column * this.elementWidth),
-            startY,
-            Math.floor(this.offset + (column + 2) * this.elementWidth),
-            endY);
 
 //        this.ctx.clearRect(rect.x, rect.y, rect.w, rect.h);
         this.ctx.fill();
@@ -387,9 +380,9 @@ class Triangle extends Background {
 
     makeTriangle(ctx, startX, startY, endX, endY) {
         ctx.beginPath();
-        ctx.moveTo(startX + (endX - startX) / 2, startY);
+        ctx.moveTo(startX, startY);
         ctx.lineTo(startX, endY);
-        ctx.lineTo(endX, endY);
+        ctx.lineTo(endX, startY);
         ctx.closePath();
 
         return {
@@ -402,32 +395,13 @@ class Triangle extends Background {
 
     mapMouse(x, y) {
         let row = Math.floor(Math.max(y - this.offset, 0) / this.elementHeight);
-        let column = Math.floor(Math.max(x - this.offset, 0) / this.elementWidth);
+        let position = Math.floor(Math.max(x - this.offset, 0) / this.elementWidth);
         let dy = y - row * this.elementHeight;
-        let dx = x - column * this.elementWidth;
+        let dx = x - position * this.elementWidth;
 
-        if (this.upright(row, column)) {
-            let point = (-this.elementHeight / this.elementWidth) * dx + this.elementHeight;
-            column = column - (dy < point ? 1 : 0);
-        }
-        else {
-            let point = (this.elementHeight / this.elementWidth) * dx;
-            column = column - (dy > point ? 1 : 0);
-        }
-
-        let mouse = undefined;
-        let leftEdge = this.size.row - (row + 1);
-        let rightEdge = this.size.row + row;
-
-        if (column >= leftEdge && column <= rightEdge) {
-            mouse = new Index(row, column);
-        }
-
-        return mouse;
-    }
-
-    upright(row, column) {
-        return (row + column) % 2 != (this.size.row % 2)
+        let point = (-this.elementHeight / this.elementWidth) * dx + this.elementHeight;
+        let column = position * 2 + (dy > point ? 1 : 0);
+        return new Index(row, column);
     }
 }
 
