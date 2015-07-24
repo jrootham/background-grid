@@ -76,6 +76,22 @@ class Index {
         return Math.sqrt(dx * dx + dy * dy);
     }
 
+    add(other) {
+        return new Index(this.row + other.row, this.column + other.column);
+    }
+
+    subtract(other) {
+        return new Index(this.row - other.row, this.column - other.column);
+    }
+
+    max(n) {
+        return new Index(Math.max(n, this.row), Math.max(n, this.column));
+    }
+
+    min(n) {
+        return new Index(Math.min(n, this.row), Math.min(n, this.column));
+    }
+
     multiply(other) {
         return new Index(this.row * other.row, this.column * other.column);
     }
