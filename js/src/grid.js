@@ -76,6 +76,11 @@ class Index {
         return Math.sqrt(dx * dx + dy * dy);
     }
 
+    assign(other) {
+        this.row = other.row;
+        this.column = other.column;
+    }
+
     add(other) {
         return new Index(this.row + other.row, this.column + other.column);
     }
