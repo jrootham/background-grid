@@ -249,6 +249,71 @@ class Background {
     }
 }
 
+class Gradient extends Background {
+    constructor(spec, canvas, foreground) {
+        super(spec, canvas, foreground);
+        this.prior = undefined;
+    }
+
+    makeElementSizes() {
+        this.elementWidth = this.width - this.borderWidth;
+        this.elementHeight = this.height - this.borderWidth;
+    }
+
+    makeColourArray() {
+        let cell = [RGBA(255, 255, 255, 0.0)];
+        let colourArray = [cell];
+
+        return colourArray;
+    }
+
+    show(inputs) {
+        let newColour = RGBA(255, 255, 255, 1.0);
+
+        let here = new Index(0, 0);
+        let oldColour = this.colourArray[0][0];
+
+        let newGradient = this.spec.setColour(this.ctx, inputs);
+        if (newGradient != undefined) {
+            this.ctx.fillStyle = newGradient;
+            if (this.borderWidth > 0) {
+                this.ctx.strokerect(0, 0, this.size.row, this.size.column);
+            }
+        }
+    }
+
+    mapMouse(x, y) {
+        let result;
+
+        if (this.prior === undefined) {
+            result = new Index(x, y);
+        }
+        else {
+            result = new Index(
+                clipMouse(x, this.prior.x, this.spec.clip),
+                clipMouse(y, this.prior.y, this.spec.clip));
+        }
+
+        this.prior = result;
+        console.log(this.prior, result);
+        return result;
+    }
+}
+
+let clipMouse = (now, prior, clip) =>{
+    if (clip != undefined) {
+        if (now < prior) {
+            return prior - Math.min(prior - now, clip);
+        }
+        else {
+            return prior + Math.min(now - prior, clip)
+        }
+    }
+    else {
+        return now;
+    }
+}
+
 class Grid extends Background {
     constructor(spec, canvas, foreground) {
         super(spec, canvas, foreground);
@@ -281,7 +346,7 @@ class Grid extends Background {
                 let here = new Index(row, column);
                 let oldColour = this.colourArray[row][column];
 
-                setColour(oldColour, here, this.size, inputs, newColour);
+                this.spec.setColour(oldColour, here, this.size, inputs, newColour);
                 if (!RgbaEquals(newColour, oldColour)) {
                     RgbaAssign(this.colourArray[row][column], newColour);
                     this.draw(column, row, newColour);
@@ -363,7 +428,7 @@ class Triangle extends Background {
                 let here = new Index(row, column);
                 let oldColour = this.colourArray[row][column];
 
-                setColour(oldColour, here, this.size, inputs, newColour);
+                this.spec.setColour(oldColour, here, this.size, inputs, newColour);
                 if (!RgbaEquals(newColour, oldColour)) {
                     RgbaAssign(this.colourArray[row][column], newColour);
                     this.draw(column, row, newColour);

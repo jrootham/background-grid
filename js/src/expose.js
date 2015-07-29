@@ -21,20 +21,19 @@ $('input[type=radio][name=size]').change(
         radius = parseInt(this.value);
     });
 
-function setColour(previous, current, size, inputs, newColour) {
+function setColour(ctx, inputs) {
     let position = inputs.getMousePosition();
+    if (position != undefined && !isNaN(position.row) && !isNaN(position.column)) {
+        let radial = ctx.createRadialGradient(position.row, position.column, 0, position.row, position.column, radius);
+        radial.addColorStop(0,rgba(RGBA(255, 255, 255, 0.0)));
+        radial.addColorStop(.99,rgba(RGBA(255, 255, 255, 0.0)));
+        radial.addColorStop(1,rgba(RGBA(255, 255, 255, 1.0)));
 
-    let transparent = 1.0;
-
-    if (position) {
-        let range = position.distance(current);
-
-        if (range < radius) {
-            transparent = 1.0 - (radius - range) / radius;
-        }
+        return radial;
     }
-
-    newColour.alpha = transparent;
+    else {
+        return undefined
+    }
 }
 
 var specArray = [
@@ -53,7 +52,8 @@ var specArray = [
             size: constantElementSize(10, 10),
             borderWidth: constantBorder(0),
             borderColour: RGBA(128, 128, 128),
-            setColour: setColour
+            setColour: setColour,
+            clip:5
         }
     },
     {
@@ -62,9 +62,10 @@ var specArray = [
             size: constantElementSize(10, 10),
             borderWidth: constantBorder(0),
             borderColour: RGBA(128, 128, 128),
-            setColour: setColour
+            setColour: setColour,
+            clip:5
         }
     }
 ]
 
-action(specArray, $('#drawing'), $('#foreground'), 30);
+action(specArray, $('#drawing'), $('#foreground'), 30, Gradient);
