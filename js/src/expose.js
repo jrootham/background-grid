@@ -42,35 +42,59 @@ $('input[type=radio][name=outer]').change(
         outer = parseFloat(this.value);
     });
 
-var interchange = $("input[name=interchange]:checked").val();
+var orbit = parseInt($("input[name=orbit]:checked").val());
 
-$('input[type=checkbox][name=interchange]:checked').change(
+$('input[type=radio][name=orbit]').change(
     function() {
-        interchange = this.value;
+        orbit = parseInt(this.value);
     });
 
-var vanish = $("input[name=vanish]:checked").val();
+var velocity = parseFloat($("input[name=velocity]:checked").val());
 
-$('input[type=checkbox][name=vanish]:checked').change(
+$('input[type=radio][name=velocity]').change(
     function() {
-        vanish = this.value;
+        velocity = parseFloat(this.value);
     });
 
-function setColour(ctx, inputs) {
-    let position = inputs.getMousePosition();''
-    if (position != undefined && !isNaN(position.row) && !isNaN(position.column)) {
-        let radial = ctx.createRadialGradient(
-            position.column, position.row, 0,
-            position.column, position.row, radius);
-        radial.addColorStop(0, rgba(RGBA(255, 255, 255, start)));
-        radial.addColorStop(.99, rgba(RGBA(255, 255, 255, inner)));
-        radial.addColorStop(1, rgba(RGBA(255, 255, 255, outer)));
+var random = parseInt($("input[name=random]:checked").val());
 
-        return radial;
-    }
-    else {
-        return undefined
-    }
+$('input[type=radio][name=random]').change(
+    function() {
+        random = parseInt(this.value);
+    });
+
+var bounce = parseFloat($("input[name=bounce]:checked").val());
+
+$('input[type=radio][name=bounce]').change(
+    function() {
+        bounce = parseFloat(this.value);
+    });
+
+function setColour(ctx, size, proper, inputs) {
+    let location = makePosition(inputs, parameters);
+    let mid = size.scale(.5);
+    proper.row += (Math.random() * parameters.random * 2) - parameters.random;
+    proper.row += (Math.random() * parameters.random * 2) - parameters.random;
+    let position = proper.add(location.add(mid));
+
+    console.log(location, mid, position);
+
+    let radial = ctx.createRadialGradient(
+        position.row, position.column, 0,
+        position.row, position.column, radius);
+    radial.addColorStop(0, rgba(RGBA(255, 255, 255, start)));
+    radial.addColorStop(.99, rgba(RGBA(255, 255, 255, inner)));
+    radial.addColorStop(1, rgba(RGBA(255, 255, 255, outer)));
+
+    return radial;
+}
+
+var makePosition = (inputs, parameters) => {
+    let rads = inputs.time * parameters.velocity;
+    let x = parameters.orbit * Math.cos(rads);
+    let y = parameters.orbit * Math.sin(rads);
+
+    return new Index(x, y);
 }
 
 var specArray = [
@@ -104,8 +128,10 @@ var specArray = [
 ]
 
 var parameters = {
-    vanish: vanish != undefined,
-    interchange: interchange != undefined
+    orbit: orbit,
+    velocity: velocity,
+    random: random,
+    bounce: bounce
 };
 
 action(specArray, $('#drawing'), $('#foreground'), 30, parameters, Gradient);

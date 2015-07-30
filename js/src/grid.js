@@ -81,6 +81,10 @@ class Index {
         this.column = other.column;
     }
 
+    scale(factor) {
+        return new Index(this.row * factor, this.column * factor);
+    }
+
     add(other) {
         return new Index(this.row + other.row, this.column + other.column);
     }
@@ -305,6 +309,8 @@ class Gradient extends Background {
     constructor(spec, canvas, foreground) {
         super(spec, canvas, foreground);
         this.prior = undefined;
+        this.canvasSize = new Index(this.width, this.height);
+        this.proper = new Index(0, 0);
     }
 
     makeElementSizes() {
@@ -325,7 +331,7 @@ class Gradient extends Background {
         let here = new Index(0, 0);
         let oldColour = this.colourArray[0][0];
 
-        let newGradient = this.spec.setColour(this.ctx, inputs);
+        let newGradient = this.spec.setColour(this.ctx, this.canvasSize, this.proper, inputs);
 
         if (newGradient != undefined) {
             this.ctx.fillStyle = newGradient;
