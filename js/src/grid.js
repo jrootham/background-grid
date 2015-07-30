@@ -123,11 +123,12 @@ class Index {
 }
 
 class Inputs {
-    constructor(foreground, background) {
+    constructor(foreground, background, acceleratpr, maxSpeed) {
         this.foreground = foreground;
         this.background = background;
         this.change(background);
 
+        this.mouseActualPosition = undefined;
         this.mousePosition = undefined;
         this.downPosition = undefined;
         this.mouseDown = false;
@@ -215,6 +216,38 @@ class Inputs {
     }
 }
 
+function gradientMapMouse(x, y) {
+    let result;
+
+    if (this.prior === undefined || isNaN(this.prior.row) || isNaN(this.prior.column)) {
+        result = new Index(y, x);
+    }
+    else {
+        result = new Index(
+            clipMouse(y, this.prior.row, this.spec.clip),
+            clipMouse(x, this.prior.column, this.spec.clip));
+    }
+
+    this.prior = result;
+    return result;
+}
+
+
+let clipMouse = (now, prior, clip) =>{
+    if (clip != undefined) {
+        if (now < prior) {
+            return prior - Math.min(prior - now, clip);
+        }
+        else {
+            return prior + Math.min(now - prior, clip)
+        }
+    }
+    else {
+        return now;
+    }
+}
+
+
 class Background {
     constructor(spec, canvas, foreground) {
         this.spec = spec;
@@ -247,6 +280,13 @@ class Background {
             this.borderWidth != newBorder ||
             !this.borderColour.equals(spec.borderColour));
     }
+
+    mapMouse(x, y) {
+        return new Index(
+            Math.floor(Math.max(y - this.offset, 0) / this.elementHeight),
+            Math.floor(Math.max(x - this.offset, 0) / this.elementWidth)
+        )
+    }
 }
 
 class Gradient extends Background {
@@ -256,8 +296,8 @@ class Gradient extends Background {
     }
 
     makeElementSizes() {
-        this.elementWidth = this.width - this.borderWidth;
-        this.elementHeight = this.height - this.borderWidth;
+        this.elementWidth = 1;
+        this.elementHeight = 1;
     }
 
     makeColourArray() {
@@ -274,44 +314,22 @@ class Gradient extends Background {
         let oldColour = this.colourArray[0][0];
 
         let newGradient = this.spec.setColour(this.ctx, inputs);
+
         if (newGradient != undefined) {
             this.ctx.fillStyle = newGradient;
-            if (this.borderWidth > 0) {
-                this.ctx.strokerect(0, 0, this.size.row, this.size.column);
-            }
-        }
-    }
-
-    mapMouse(x, y) {
-        let result;
-
-        if (this.prior === undefined) {
-            result = new Index(x, y);
         }
         else {
-            result = new Index(
-                clipMouse(x, this.prior.x, this.spec.clip),
-                clipMouse(y, this.prior.y, this.spec.clip));
+            this.ctx.fillStyle = rgba(newColour);
         }
 
-        this.prior = result;
-        console.log(this.prior, result);
-        return result;
-    }
-}
+        this.ctx.clearRect(0, 0, this.width, this.height);
+        this.ctx.fillRect(0, 0, this.width, this.height);
 
-let clipMouse = (now, prior, clip) =>{
-    if (clip != undefined) {
-        if (now < prior) {
-            return prior - Math.min(prior - now, clip);
-        }
-        else {
-            return prior + Math.min(now - prior, clip)
+        if (this.borderWidth > 0) {
+            this.ctx.strokeRect(0, 0, this.width, this.height);
         }
     }
-    else {
-        return now;
-    }
+
 }
 
 class Grid extends Background {
@@ -387,13 +405,6 @@ class Grid extends Background {
             w : endX - startX,
             h : endY - startY
         }
-    }
-
-    mapMouse(x, y) {
-        return new Index(
-            Math.floor(Math.max(y - this.offset, 0) / this.elementHeight),
-            Math.floor(Math.max(x - this.offset, 0) / this.elementWidth)
-        )
     }
 }
 
@@ -489,12 +500,13 @@ class Triangle extends Background {
         let column = position * 2 + (dy > point ? 1 : 0);
         return new Index(row, column);
     }
+
 }
 
 function action(specArray, canvas, foreground, interval, shape = Grid) {
     let spec = getSpec(specArray, canvas);
     let backgound = new shape(spec, canvas, foreground);
-    let inputs = new Inputs(foreground, backgound);
+    let inputs = new Inputs(foreground, backgound, .9, 6);
     backgound.show(inputs);
 
     $(window).resize(event => {

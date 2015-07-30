@@ -21,13 +21,34 @@ $('input[type=radio][name=size]').change(
         radius = parseInt(this.value);
     });
 
+var start = parseFloat($("input[name=start]:checked").val());
+
+$('input[type=radio][name=start]').change(
+    function() {
+        start = parseFloat(this.value);
+    });
+
+var inner = parseFloat($("input[name=inner]:checked").val());
+
+$('input[type=radio][name=inner]').change(
+    function() {
+        inner = parseFloat(this.value);
+    });
+
+var outer = parseFloat($("input[name=outer]:checked").val());
+
+$('input[type=radio][name=outer]').change(
+    function() {
+        outer = parseFloat(this.value);
+    });
+
 function setColour(ctx, inputs) {
-    let position = inputs.getMousePosition();
+    let position = inputs.getMousePosition();''
     if (position != undefined && !isNaN(position.row) && !isNaN(position.column)) {
         let radial = ctx.createRadialGradient(position.row, position.column, 0, position.row, position.column, radius);
-        radial.addColorStop(0,rgba(RGBA(255, 255, 255, 0.0)));
-        radial.addColorStop(.99,rgba(RGBA(255, 255, 255, 0.0)));
-        radial.addColorStop(1,rgba(RGBA(255, 255, 255, 1.0)));
+        radial.addColorStop(0, rgba(RGBA(255, 255, 255, start)));
+        radial.addColorStop(.99, rgba(RGBA(255, 255, 255, inner)));
+        radial.addColorStop(1, rgba(RGBA(255, 255, 255, outer)));
 
         return radial;
     }
@@ -41,7 +62,7 @@ var specArray = [
         condition: big,
         spec: {
             size: constantElementSize(10, 10),
-            borderWidth: constantBorder(0),
+            borderWidth: constantBorder(3),
             borderColour: RGBA(128, 128, 128),
             setColour: setColour
         }
@@ -50,20 +71,18 @@ var specArray = [
         condition: medium,
         spec: {
             size: constantElementSize(10, 10),
-            borderWidth: constantBorder(0),
+            borderWidth: constantBorder(3),
             borderColour: RGBA(128, 128, 128),
-            setColour: setColour,
-            clip:5
+            setColour: setColour
         }
     },
     {
         condition: always,
         spec: {
             size: constantElementSize(10, 10),
-            borderWidth: constantBorder(0),
+            borderWidth: constantBorder(3),
             borderColour: RGBA(128, 128, 128),
-            setColour: setColour,
-            clip:5
+            setColour: setColour
         }
     }
 ]
