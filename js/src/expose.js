@@ -45,7 +45,9 @@ $('input[type=radio][name=outer]').change(
 function setColour(ctx, inputs) {
     let position = inputs.getMousePosition();''
     if (position != undefined && !isNaN(position.row) && !isNaN(position.column)) {
-        let radial = ctx.createRadialGradient(position.row, position.column, 0, position.row, position.column, radius);
+        let radial = ctx.createRadialGradient(
+            position.column, position.row, 0,
+            position.column, position.row, radius);
         radial.addColorStop(0, rgba(RGBA(255, 255, 255, start)));
         radial.addColorStop(.99, rgba(RGBA(255, 255, 255, inner)));
         radial.addColorStop(1, rgba(RGBA(255, 255, 255, outer)));

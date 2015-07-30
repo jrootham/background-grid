@@ -123,7 +123,7 @@ class Index {
 }
 
 class Inputs {
-    constructor(foreground, background, acceleratpr, maxSpeed) {
+    constructor(foreground, background, accelerator, maxSpeed) {
         this.foreground = foreground;
         this.background = background;
         this.change(background);
@@ -505,18 +505,18 @@ class Triangle extends Background {
 
 function action(specArray, canvas, foreground, interval, shape = Grid) {
     let spec = getSpec(specArray, canvas);
-    let backgound = new shape(spec, canvas, foreground);
-    let inputs = new Inputs(foreground, backgound, .9, 6);
-    backgound.show(inputs);
+    let background = new shape(spec, canvas, foreground);
+    let inputs = new Inputs(foreground, background, .9, 6);
+    background.show(inputs);
 
     $(window).resize(event => {
         spec= getSpec(specArray, canvas);
-        backgound = new shape(spec, canvas, foreground);
+        background = new shape(spec, canvas, foreground);
         inputs.change(backgound);
     });
 
     setInterval(function() {
-        backgound.show(inputs);
+        background.show(inputs);
         inputs.clock();
     }, interval);
 }
