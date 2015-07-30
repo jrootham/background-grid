@@ -42,6 +42,20 @@ $('input[type=radio][name=outer]').change(
         outer = parseFloat(this.value);
     });
 
+var interchange = $("input[name=interchange]:checked").val();
+
+$('input[type=checkbox][name=interchange]:checked').change(
+    function() {
+        interchange = this.value;
+    });
+
+var vanish = $("input[name=vanish]:checked").val();
+
+$('input[type=checkbox][name=vanish]:checked').change(
+    function() {
+        vanish = this.value;
+    });
+
 function setColour(ctx, inputs) {
     let position = inputs.getMousePosition();''
     if (position != undefined && !isNaN(position.row) && !isNaN(position.column)) {
@@ -89,4 +103,9 @@ var specArray = [
     }
 ]
 
-action(specArray, $('#drawing'), $('#foreground'), 30, Gradient);
+var parameters = {
+    vanish: vanish != undefined,
+    interchange: interchange != undefined
+};
+
+action(specArray, $('#drawing'), $('#foreground'), 30, parameters, Gradient);

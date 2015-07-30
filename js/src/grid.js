@@ -123,7 +123,8 @@ class Index {
 }
 
 class Inputs {
-    constructor(foreground, background, accelerator, maxSpeed) {
+    constructor(foreground, background, parameters) {
+        this.parameters = parameters;
         this.foreground = foreground;
         this.background = background;
         this.change(background);
@@ -142,7 +143,12 @@ class Inputs {
         });
 
         this.foreground.mouseleave(event => {
-            this.mousePosition = undefined;
+            if (this.parameters.vanish) {
+                this.mousePosition = undefined;
+            }
+            else {
+                this.mouseActualPosition = undefined;
+            }
             this.downPosition = undefined;
             this.mouseDown = false;
             this.mouseUp = false;
@@ -184,7 +190,13 @@ class Inputs {
         let location = this.foreground.offset();
         let x = event.pageX - location.left;
         let y = event.pageY - location.top;
-        return background.mapMouse(x, y);
+
+        if (this.parameters.interchange) {
+            return background.mapMouse(y, x);
+        }
+        else {
+            return background.mapMouse(x, y);
+        }
     }
 
     getMousePosition() {
@@ -503,10 +515,10 @@ class Triangle extends Background {
 
 }
 
-function action(specArray, canvas, foreground, interval, shape = Grid) {
+function action(specArray, canvas, foreground, interval, parameters, shape = Grid) {
     let spec = getSpec(specArray, canvas);
     let background = new shape(spec, canvas, foreground);
-    let inputs = new Inputs(foreground, background, .9, 6);
+    let inputs = new Inputs(foreground, background, parameters);
     background.show(inputs);
 
     $(window).resize(event => {
