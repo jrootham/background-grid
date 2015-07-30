@@ -42,42 +42,15 @@ $('input[type=radio][name=outer]').change(
         outer = parseFloat(this.value);
     });
 
-var orbit = parseInt($("input[name=orbit]:checked").val());
-
-$('input[type=radio][name=orbit]').change(
-    function() {
-        orbit = parseInt(this.value);
-    });
-
-var velocity = parseFloat($("input[name=velocity]:checked").val());
+var velocity = parseInt($("input[name=velocity]:checked").val());
 
 $('input[type=radio][name=velocity]').change(
     function() {
-        velocity = parseFloat(this.value);
+        velocity = parseInt(this.value);
     });
 
-var random = parseInt($("input[name=random]:checked").val());
-
-$('input[type=radio][name=random]').change(
-    function() {
-        random = parseInt(this.value);
-    });
-
-var bounce = parseFloat($("input[name=bounce]:checked").val());
-
-$('input[type=radio][name=bounce]').change(
-    function() {
-        bounce = parseFloat(this.value);
-    });
-
-function setColour(ctx, size, proper, inputs) {
-    let location = makePosition(inputs, parameters);
-    let mid = size.scale(.5);
-    proper.row += (Math.random() * parameters.random * 2) - parameters.random;
-    proper.row += (Math.random() * parameters.random * 2) - parameters.random;
-    let position = proper.add(location.add(mid));
-
-    console.log(location, mid, position);
+function setColour(ctx, size, current, target, inputs) {
+    let position = makePosition(inputs, parameters, size, current, target);
 
     let radial = ctx.createRadialGradient(
         position.row, position.column, 0,
@@ -89,12 +62,14 @@ function setColour(ctx, size, proper, inputs) {
     return radial;
 }
 
-var makePosition = (inputs, parameters) => {
-    let rads = inputs.time * parameters.velocity;
-    let x = parameters.orbit * Math.cos(rads);
-    let y = parameters.orbit * Math.sin(rads);
+var makePosition = (inputs, parameters, size, current, target) => {
+    if (current.equals(target)) {
+        let temp = new Index(Math.random() * size.row, Math.random() * size.column).round();
+        target.row = temp.row;
+        target.column = temp.column;
+    }
 
-    return new Index(x, y);
+    return target.subtract(current).clip(parameters.velocity);
 }
 
 var specArray = [
@@ -128,10 +103,7 @@ var specArray = [
 ]
 
 var parameters = {
-    orbit: orbit,
-    velocity: velocity,
-    random: random,
-    bounce: bounce
+    velocity: velocity
 };
 
 action(specArray, $('#drawing'), $('#foreground'), 30, parameters, Gradient);

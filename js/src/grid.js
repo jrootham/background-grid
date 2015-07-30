@@ -85,6 +85,26 @@ class Index {
         return new Index(this.row * factor, this.column * factor);
     }
 
+    delta(increment) {
+        return new Index(this.row + increment, this.column + increment);
+    }
+
+    clip(limit) {
+        return new Index(this.clipNumber(this.row, limit), this.clipNumber(this.column, limit));
+    }
+
+    clipNumber(value, limit) {
+        let result = value;
+        if (limit > 0) {
+            result = Math.max(value, limit);
+        }
+        else {
+            result = Math.min(value, limit);
+        }
+
+        return result;
+    }
+
     add(other) {
         return new Index(this.row + other.row, this.column + other.column);
     }
@@ -310,7 +330,8 @@ class Gradient extends Background {
         super(spec, canvas, foreground);
         this.prior = undefined;
         this.canvasSize = new Index(this.width, this.height);
-        this.proper = new Index(0, 0);
+        this.current = new Index(0, 0);
+        this.target = new Index(0,0);
     }
 
     makeElementSizes() {
@@ -331,7 +352,7 @@ class Gradient extends Background {
         let here = new Index(0, 0);
         let oldColour = this.colourArray[0][0];
 
-        let newGradient = this.spec.setColour(this.ctx, this.canvasSize, this.proper, inputs);
+        let newGradient = this.spec.setColour(this.ctx, this.canvasSize, this.current, this.target, inputs);
 
         if (newGradient != undefined) {
             this.ctx.fillStyle = newGradient;
