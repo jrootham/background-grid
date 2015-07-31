@@ -31,8 +31,6 @@ function setColour(previous, current, size, inputs, newColour) {
             newColour.red = Math.max(0, previous.red - darkTick);
             newColour.green = Math.max(0, previous.green - darkTick);
             newColour.blue = Math.max(0, previous.blue - darkTick);
-
-            console.log(previous, newColour);
         } else {
             newColour.red = Math.min(255, previous.red + lightTick);
             newColour.green = Math.min(255, previous.green + lightTick);

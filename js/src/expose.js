@@ -62,15 +62,81 @@ function setColour(ctx, size, current, target, inputs) {
     return radial;
 }
 
-var makePosition = (inputs, parameters, size, current, target) => {
-    if (current.equals(target)) {
-        let temp = new Index(Math.random() * size.row, Math.random() * size.column).round();
-        target.row = temp.row;
-        target.column = temp.column;
+class Polynomial{
+    constructor() {
+        this.firstTarget = 0;
+        this.firstSlope = 0;
+        this.secondTarget = 0;
+        this.secondSlope = 0;
+        this.maxT = 0;
+        this.t = 0;
+        this.poly = [0, 0, 0 ,0];
     }
 
-    return target.subtract(current).clip(parameters.velocity);
+    set(newTarget, maxT) {
+        this.t = 0;
+        this.maxT = maxT;
+        this.firstTarget = this.secondTarget;
+        this.firstSlope = this.secondSlope;
+        this.secondTarget = newTarget;
+        this.secondSlope = (this.secondTarget - this.firstTarget) / maxT;
+
+        this.solve(maxT);
+    }
+
+    solve(t) {
+        let d = this.firstTarget;
+        let c = this.firstSlope;
+
+        let t2 = t * t;
+        let t3 = t2 * t;
+
+        let dp = this.secondTarget - this.firstTarget;
+        let ds = this.secondSlope - this.firstSlope;
+
+        let k = this.secondTarget - (ds / 3 + c * t + d);
+        let b = k / (3 * t * t - 2 * t);
+
+        let a = (this.secondTarget - (b * t2 + c * t + d)) / t3;
+
+        this.t = 0;
+
+        this.poly[0] = a;
+        this.poly[1] = b;
+        this.poly[2] = c;
+        this.poly[3] = d;
+    }
+
+    step() {
+        let t1 = this.t;
+        let t2 = t1 * t1;
+        let t3 = t1 * t2;
+        this.t++;
+        return this.poly[0] * t3 + this.poly[1] * t2
+            + this.poly[2] * t1 + this.poly[3];
+    }
+
+    done() {
+        let result = this.t >= this.maxT;
+        return result;
+    }
 }
+
+var polynomialX = new Polynomial();
+var polynomialY = new Polynomial();
+
+var makePosition = (inputs, parameters, size, current, target) => {
+    if (polynomialX.done()) {
+        let newXTarget = Math.round(Math.random() * size.row);
+        let newYTarget = Math.round(Math.random() * size.column);
+        let maxT = Math.round(Math.max(newXTarget / velocity, newYTarget / velocity))
+        polynomialX.set(newXTarget, maxT);
+        polynomialY.set(newYTarget, maxT);
+    }
+
+    return new Index(polynomialX.step(), polynomialY.step());
+}
+
 
 var specArray = [
     {

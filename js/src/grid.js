@@ -95,11 +95,11 @@ class Index {
 
     clipNumber(value, limit) {
         let result = value;
-        if (limit > 0) {
-            result = Math.max(value, limit);
+        if (value > 0) {
+            result = Math.min(value, limit);
         }
         else {
-            result = Math.min(value, limit);
+            result = Math.max(value, -limit);
         }
 
         return result;
@@ -330,8 +330,6 @@ class Gradient extends Background {
         super(spec, canvas, foreground);
         this.prior = undefined;
         this.canvasSize = new Index(this.width, this.height);
-        this.current = new Index(0, 0);
-        this.target = new Index(0,0);
     }
 
     makeElementSizes() {
