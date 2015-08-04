@@ -91,7 +91,6 @@ class Polynomial{
         let t2 = t * t;
         let t3 = t2 * t;
 
-        let dp = this.secondTarget - this.firstTarget;
         let ds = this.secondSlope - this.firstSlope;
 
         let k = this.secondTarget - (ds / 3 + c * t + d);
@@ -129,6 +128,8 @@ var makePosition = (inputs, parameters, size, current, target) => {
     if (polynomialX.done()) {
         let newXTarget = Math.round(Math.random() * size.row);
         let newYTarget = Math.round(Math.random() * size.column);
+        console.log(size, newXTarget, newYTarget);
+
         let maxT = Math.round(Math.max(newXTarget / velocity, newYTarget / velocity))
         polynomialX.set(newXTarget, maxT);
         polynomialY.set(newYTarget, maxT);

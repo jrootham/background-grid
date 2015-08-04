@@ -549,7 +549,7 @@ function action(specArray, canvas, foreground, interval, parameters, shape = Gri
     $(window).resize(event => {
         spec= getSpec(specArray, canvas);
         background = new shape(spec, canvas, foreground);
-        inputs.change(backgound);
+        inputs.change(background);
     });
 
     setInterval(function() {
