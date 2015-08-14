@@ -79,12 +79,16 @@ class Polynomial{
         this.firstTarget = this.secondTarget;
         this.firstSlope = this.secondSlope;
         this.secondTarget = newTarget;
-        this.secondSlope = (this.secondTarget - this.firstTarget) / maxT;
+        let delta = this.secondTarget-this.firstTarget;
+        this.secondSlope = Math.sign(delta) * (Math.sqrt(Math.sqrt(Math.abs(delta))));
 
         this.solve(maxT);
     }
 
     solve(t) {
+        console.log("former", this.poly);
+        console.log(this.firstTarget, this.firstSlope, this.secondTarget, this.secondSlope);
+
         let d = this.firstTarget;
         let c = this.firstSlope;
 
@@ -104,13 +108,20 @@ class Polynomial{
         this.poly[1] = b;
         this.poly[2] = c;
         this.poly[3] = d;
+        console.log("latter", this.poly, this.step(0));
     }
 
-    step() {
+    derivative() {
+        let t = this.t;
+        let t2 = t * t;
+        return 3 * this.poly[0] * t2 + 2 * this.poly[1] * t + this.poly[2];
+    }
+
+    step(delta = 1) {
         let t1 = this.t;
         let t2 = t1 * t1;
         let t3 = t1 * t2;
-        this.t++;
+        this.t+= delta;
         return this.poly[0] * t3 + this.poly[1] * t2
             + this.poly[2] * t1 + this.poly[3];
     }
@@ -128,14 +139,18 @@ var makePosition = (inputs, parameters, size, current, target) => {
     if (polynomialX.done()) {
         let newXTarget = Math.round(Math.random() * size.row);
         let newYTarget = Math.round(Math.random() * size.column);
-        console.log(size, newXTarget, newYTarget);
 
-        let maxT = Math.round(Math.max(newXTarget / velocity, newYTarget / velocity))
+        let maxT = Math.round(Math.max(newXTarget/velocity, newYTarget/velocity));
         polynomialX.set(newXTarget, maxT);
         polynomialY.set(newYTarget, maxT);
     }
 
-    return new Index(polynomialX.step(), polynomialY.step());
+    let derivativeX = Math.abs(polynomialX.derivative());
+    let derivativeY = Math.abs(polynomialY.derivative());
+    let delta = Math.max(derivativeX, derivativeY);
+    let step = 1 / Math.max(.1, delta);
+    step = 1;
+    return new Index(polynomialX.step(step), polynomialY.step(step));
 }
 
 
