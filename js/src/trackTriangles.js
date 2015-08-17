@@ -138,7 +138,7 @@ var triangles = [
     [{x:508, y:540},{x:762, y:540},{x:762, y:720}],
     [{x:508, y:360},{x:635, y:360},{x:508, y:540}],
     [{x:508, y:540},{x:635, y:360},{x:635, y:540}],
-    [{x:635, y:540},{x:762, y:360},{x:762, y:450}],
+    [{x:635, y:360},{x:762, y:360},{x:762, y:450}],
     [{x:635, y:360},{x:762, y:450},{x:635, y:450}],
     [{x:762, y:450},{x:762, y:540},{x:698.5, y:540}],
     [{x:698.5, y:450},{x:762, y:450},{x:698.5, y:540}],
@@ -218,10 +218,13 @@ let scaleTriangle = (scale, triangle) => {
 
 let testTriangle = (scale, box, triangle, point) => {
     let scaledTriangle = scaleTriangle(scale, triangle);
-
+    console.log("testing triangle", scaledTriangle[0], scaledTriangle[1], scaledTriangle[2], point);
     if (hasTopLeft(scaledTriangle, box)) {
+        console.log("has top left");
         if (hasBottomLeft(scaledTriangle, box)) {
+            console.log("has bottom left");
             if (hasTopRight(scaledTriangle, box)) {
+                console.log("has top rigth");
                 return inTopLeft(point, box);
             }
             else {
@@ -262,35 +265,45 @@ let inTopLeft = (point, box) => {
     let xRatio = (box.right - point.x) / (box.right - box.left);
     let yRatio = (point.y - box.top) / (box.bottom - box.top);
 
-    return xRatio >= yRatio;
+    let result = xRatio >= yRatio;
+    console.log("In top left", result);
+    return result;
 }
 
 let inTopRight = (point, box) => {
     let xRatio = (point.x - box.left) / (box.right - box.left);
     let yRatio = (point.y - box.top) / (box.bottom - box.top);
 
-    return xRatio >= yRatio;
+    let result =  xRatio >= yRatio;
+    console.log("In top right", result);
+    return result;
 }
 
 let inBottomLeft = (point, box) => {
     let xRatio = (box.right - point.x) / (box.right - box.left);
-    let yRatio = (point.y - box.top) / (box.bottom - box.top);
+    let yRatio = (box.bottom - point.y) / (box.bottom - box.top);
 
-    return xRatio <= yRatio;
+    let result =  xRatio >= yRatio;
+    console.log("In bottom left", result);
+
+    return result;
 }
 
 let inBottomRight = (point, box) => {
-    let xRatio = (point.x - box.left) / (box.right - box.left);
+    let xRatio = (box.right - point.x) / (box.right - box.left);
     let yRatio = (point.y - box.top) / (box.bottom - box.top);
 
-    return xRatio <= yRatio;
+    let result =  xRatio <= yRatio;
+    console.log("In bottom right", result);
+
+    return result;
 }
 
-let makePath = (context, triangle) => {
+let makePath = (context, scale, triangle) => {
     context.beginPath();
-    context.moveTo(triangle[0].x, triangle[0].y);
-    context.lineTo(triangle[1].x, triangle[1].y);
-    context.lineTo(triangle[2].x, triangle[2].y);
+    context.moveTo(triangle[0].x * scale, triangle[0].y * scale);
+    context.lineTo(triangle[1].x * scale, triangle[1].y * scale);
+    context.lineTo(triangle[2].x * scale, triangle[2].y * scale);
     context.closePath();
 }
 
@@ -299,16 +312,59 @@ let makePath = (context, triangle) => {
 //findTriangle(1, {x:100, y:100}, triangles);
 //findTriangle(1, {x:600, y:600}, triangles);
 
-let inputs = new Inputs($("#foreground"));
+let fore = $("#foreground");
+let inputs = new Inputs(fore);
+$(window).resize(event => {
+    canvas.width = $("#background").width();
+    canvas.height = $("#background").height();
+    scale = canvas.width / FULL_WIDTH;
+});
 
-setInterval(function(){
+fore.click(event => {
+    let context = canvas.getContext("2d");
+    context.fillStyle = "rgba(255, 255, 255, 1.0)";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.strokeStyle = "rgba(0, 0, 0, 1.0)";
+    triangles.forEach((triangle) => {
+            makePath(context, scale, triangle);
+            context.stroke();
+        }
+    );
+
     let position = inputs.mousePosition;
     if (position) {
-        let context = canvas.getContext("2d");
-        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = "rgba(255, 255, 255, 0.0)";
+        let triangle = findTriangle(scale, position, triangles);
+        if (triangle) {
+            makePath(context, scale, triangle);
+            context.save();
+            context.clip();
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.fillRect(0, 0, canvas.width, canvas.height);
+            context.restore();
+        }
+    }
+});
+
+/*
+setInterval => {
+    let context = canvas.getContext("2d");
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.strokeStyle = "rgba(255, 255, 255, 1.0)";
+    triangles.forEach((triangle) => {
+            makePath(context, scale, triangle);
+            context.stroke();
+        }
+    );
+
+    let position = inputs.mousePosition;
+    if (position) {
         context.fillStyle = "rgba(255, 255, 255, 1.0)";
         let triangle = findTriangle(scale, position, triangles);
-        makePath(context, triangle);
-        context.fill();
+        if (triangle) {
+            makePath(context, scale, triangle);
+            context.fill();
+        }
     }
-}, 300);
+}, 2000);
+*/
