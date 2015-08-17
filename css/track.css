@@ -2,7 +2,7 @@
 {
     position:           absolute;
     z-index:            0;
-    width:              1016px;
+    width:              80vw;
     height:             720px;
     background-color:   transparent;
 }
@@ -18,7 +18,7 @@
 {
     position:           absolute;
     z-index:            10;
-    width:              1016px;
+    width:              80vw;
     height:             720px;
     background-color:   transparent;
 }
@@ -27,7 +27,7 @@
 {
     position:           absolute;
     z-index:            -10;
-    width:              1016px;
+    width:              80vw;
     height:             720px;
     font-size:          55pt;
     background-color:   aqua;

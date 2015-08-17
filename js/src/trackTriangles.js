@@ -120,12 +120,23 @@ if (!Array.prototype.map) {
 
 const FULL_WIDTH = 1016;
 const EPSILON = 0.000001;
+const INTERVAL = 20;
 
 let canvas = document.getElementById("drawing");
 canvas.width = $("#background").width();
 canvas.height = $("#background").height();
 
 let scale = canvas.width / FULL_WIDTH;
+
+let fadeTime = parseInt($("input[name=fadeTime]:checked").val());
+
+$('input[type=radio][name=fadeTime]').change(
+    function() {
+        fadeTime = parseInt(this.value);
+        transparencyDelta = (INTERVAL / 1000)  / fadeTime;
+    });
+
+let transparencyDelta = (INTERVAL / 1000)  / fadeTime;
 
 var triangles = [
     [{x:0, y:0},{x:0, y:720},{x:508, y:0}],
@@ -185,6 +196,10 @@ class Inputs {
         this.foreground.mousemove((event) =>{
             this.mousePosition = this.saveMouse(event);
         });
+
+        this.foreground.mouseleave(event => {
+            this.mousePosition = undefined;
+        });
     }
 
     saveMouse(event) {
@@ -218,13 +233,9 @@ let scaleTriangle = (scale, triangle) => {
 
 let testTriangle = (scale, box, triangle, point) => {
     let scaledTriangle = scaleTriangle(scale, triangle);
-    console.log("testing triangle", scaledTriangle[0], scaledTriangle[1], scaledTriangle[2], point);
     if (hasTopLeft(scaledTriangle, box)) {
-        console.log("has top left");
         if (hasBottomLeft(scaledTriangle, box)) {
-            console.log("has bottom left");
             if (hasTopRight(scaledTriangle, box)) {
-                console.log("has top rigth");
                 return inTopLeft(point, box);
             }
             else {
@@ -266,7 +277,6 @@ let inTopLeft = (point, box) => {
     let yRatio = (point.y - box.top) / (box.bottom - box.top);
 
     let result = xRatio >= yRatio;
-    console.log("In top left", result);
     return result;
 }
 
@@ -275,7 +285,6 @@ let inTopRight = (point, box) => {
     let yRatio = (point.y - box.top) / (box.bottom - box.top);
 
     let result =  xRatio >= yRatio;
-    console.log("In top right", result);
     return result;
 }
 
@@ -284,7 +293,6 @@ let inBottomLeft = (point, box) => {
     let yRatio = (box.bottom - point.y) / (box.bottom - box.top);
 
     let result =  xRatio >= yRatio;
-    console.log("In bottom left", result);
 
     return result;
 }
@@ -294,7 +302,6 @@ let inBottomRight = (point, box) => {
     let yRatio = (point.y - box.top) / (box.bottom - box.top);
 
     let result =  xRatio <= yRatio;
-    console.log("In bottom right", result);
 
     return result;
 }
@@ -320,7 +327,10 @@ $(window).resize(event => {
     scale = canvas.width / FULL_WIDTH;
 });
 
-fore.click(event => {
+let previous = undefined;
+let transparency = 1.0;
+
+setInterval (() => {
     let context = canvas.getContext("2d");
     context.fillStyle = "rgba(255, 255, 255, 1.0)";
     context.fillRect(0, 0, canvas.width, canvas.height);
@@ -333,9 +343,17 @@ fore.click(event => {
 
     let position = inputs.mousePosition;
     if (position) {
-        context.fillStyle = "rgba(255, 255, 255, 0.0)";
         let triangle = findTriangle(scale, position, triangles);
         if (triangle) {
+            if (triangle === previous) {
+                transparency = Math.max(0, transparency - transparencyDelta);
+            }
+            else {
+                transparency = 1.0;
+                previous = triangle;
+            }
+
+            context.fillStyle = `rgba(255, 255, 255, ${transparency})`;
             makePath(context, scale, triangle);
             context.save();
             context.clip();
@@ -344,27 +362,4 @@ fore.click(event => {
             context.restore();
         }
     }
-});
-
-/*
-setInterval => {
-    let context = canvas.getContext("2d");
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.strokeStyle = "rgba(255, 255, 255, 1.0)";
-    triangles.forEach((triangle) => {
-            makePath(context, scale, triangle);
-            context.stroke();
-        }
-    );
-
-    let position = inputs.mousePosition;
-    if (position) {
-        context.fillStyle = "rgba(255, 255, 255, 1.0)";
-        let triangle = findTriangle(scale, position, triangles);
-        if (triangle) {
-            makePath(context, scale, triangle);
-            context.fill();
-        }
-    }
-}, 2000);
-*/
+}, INTERVAL);
