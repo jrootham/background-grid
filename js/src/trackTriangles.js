@@ -134,6 +134,7 @@ $('input[type=radio][name=fadeTime]').change(
     function() {
         fadeTime = parseInt(this.value);
         transparencyDelta = (INTERVAL / 1000)  / fadeTime;
+        transparency = 1.0;
     });
 
 let transparencyDelta = (INTERVAL / 1000)  / fadeTime;
@@ -199,6 +200,7 @@ class Inputs {
 
         this.foreground.mouseleave(event => {
             this.mousePosition = undefined;
+            transparency = 1.0;
         });
     }
 
