@@ -316,10 +316,32 @@ let makePath = (context, scale, triangle) => {
     context.closePath();
 }
 
-//findTriangle(1, {x:10, y:10}, triangles);
-//findTriangle(1, {x:20, y:710}, triangles);
-//findTriangle(1, {x:100, y:100}, triangles);
-//findTriangle(1, {x:600, y:600}, triangles);
+let drawTriangle = (context, scale, triangle) => {
+    drawEdge(context, scale, triangle[0], triangle[1]);
+    drawEdge(context, scale, triangle[0], triangle[2]);
+    drawEdge(context, scale, triangle[1], triangle[2]);
+}
+
+let drawEdge = (context, scale, point0, point1) => {
+    let dx = point0.x - point1.x;
+    let dy = point0.y - point1.y;
+
+    context.save();
+    if (dx === 0 || dy === 0) {
+        context.strokeStyle = "black";
+    }
+    else {
+        context.strokeStyle = "blue";
+        context.setLineDash([5, 5]);
+    }
+
+    context.beginPath();
+    context.moveTo(point0.x * scale, point0.y * scale);
+    context.lineTo(point1.x * scale, point1.y * scale);
+    context.stroke();
+
+    context.restore();
+}
 
 let fore = $("#foreground");
 let inputs = new Inputs(fore);
@@ -336,10 +358,8 @@ setInterval (() => {
     let context = canvas.getContext("2d");
     context.fillStyle = "rgba(255, 255, 255, 1.0)";
     context.fillRect(0, 0, canvas.width, canvas.height);
-    context.strokeStyle = "rgba(0, 0, 0, 1.0)";
     triangles.forEach((triangle) => {
-            makePath(context, scale, triangle);
-            context.stroke();
+            drawTriangle(context,scale, triangle);
         }
     );
 
