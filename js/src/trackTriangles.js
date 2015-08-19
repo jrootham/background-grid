@@ -316,31 +316,46 @@ let makePath = (context, scale, triangle) => {
     context.closePath();
 }
 
-let drawTriangle = (context, scale, triangle) => {
-    drawEdge(context, scale, triangle[0], triangle[1]);
-    drawEdge(context, scale, triangle[0], triangle[2]);
-    drawEdge(context, scale, triangle[1], triangle[2]);
+class Edge {
+    constructor(pointA, pointB) {
+
+        // Make sure we draw diagonal lines in the same order
+
+        if (pointA.x < pointB.x) {
+            this.point0 = pointA;
+            this.point1 = pointB;
+        }
+        else {
+            this.point0 = pointB;
+            this.point1 = pointA;
+        }
+    }
+
+    draw(context, scale) {
+        let dx = this.point0.x - this.point1.x;
+        let dy = this.point0.y - this.point1.y;
+
+        context.save();
+        if (dx === 0 || dy === 0) {
+            context.strokeStyle = "black";
+        }
+        else {
+            context.strokeStyle = "blue";
+            context.setLineDash([5, 5]);
+        }
+
+        context.beginPath();
+        context.moveTo(this.point0.x * scale, this.point0.y * scale);
+        context.lineTo(this.point1.x * scale, this.point1.y * scale);
+        context.stroke();
+
+        context.restore();
+    }
 }
-
-let drawEdge = (context, scale, point0, point1) => {
-    let dx = point0.x - point1.x;
-    let dy = point0.y - point1.y;
-
-    context.save();
-    if (dx === 0 || dy === 0) {
-        context.strokeStyle = "black";
-    }
-    else {
-        context.strokeStyle = "blue";
-        context.setLineDash([5, 5]);
-    }
-
-    context.beginPath();
-    context.moveTo(point0.x * scale, point0.y * scale);
-    context.lineTo(point1.x * scale, point1.y * scale);
-    context.stroke();
-
-    context.restore();
+let drawTriangle = (context, scale, triangle) => {
+    (new Edge(triangle[0], triangle[1])).draw(context, scale);
+    (new Edge(triangle[0], triangle[2])).draw(context, scale);
+    (new Edge(triangle[1], triangle[2])).draw(context, scale);
 }
 
 let fore = $("#foreground");
