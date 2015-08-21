@@ -122,16 +122,24 @@ const FULL_WIDTH = 1016;
 const EPSILON = 0.000001;
 const INTERVAL = 20;
 
-let fadeTime = parseInt($("input[name=fadeTime]:checked").val());
+let fadeInTime = parseInt($("input[name=fadeInTime]:checked").val());
+let inTransparencyDelta = (INTERVAL / 1000)  / fadeInTime;
 
-$('input[type=radio][name=fadeTime]').change(
+$('input[type=radio][name=fadeInTime]').change(
     function() {
-        fadeTime = parseInt(this.value);
-        transparencyDelta = (INTERVAL / 1000)  / fadeTime;
-        transparency = 1.0;
+        fadeInTime = parseInt(this.value);
+        inTransparencyDelta = (INTERVAL / 1000)  / fadeInTime;
     });
 
-let transparencyDelta = (INTERVAL / 1000)  / fadeTime;
+let fadeOutTime = parseInt($("input[name=fadeOutTime]:checked").val());
+let outTransparencyDelta = (INTERVAL / 1000)  / fadeOutTime;
+
+$('input[type=radio][name=fadeOutTime]').change(
+    function() {
+        fadeOutTime = parseInt(this.value);
+        outTransparencyDelta = (INTERVAL / 1000)  / fadeOutTime;
+    });
+
 
 class Edge {
     constructor(pointA, pointB) {
@@ -299,10 +307,10 @@ class Triangle {
 
     draw(context, point) {
         if (this.testPoint(point)) {
-            this.transparency = Math.max(0, this.transparency - transparencyDelta);
+            this.transparency = Math.max(0, this.transparency - inTransparencyDelta);
         }
         else {
-            this.transparency = Math.min(1.0, this.transparency + transparencyDelta);
+            this.transparency = Math.min(1.0, this.transparency + outTransparencyDelta);
         }
 
         this.makePath(context);
