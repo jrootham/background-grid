@@ -122,12 +122,6 @@ const FULL_WIDTH = 1016;
 const EPSILON = 0.000001;
 const INTERVAL = 20;
 
-let canvas = document.getElementById("drawing");
-canvas.width = $("#background").width();
-canvas.height = $("#background").height();
-
-let scale = canvas.width / FULL_WIDTH;
-
 let fadeTime = parseInt($("input[name=fadeTime]:checked").val());
 
 $('input[type=radio][name=fadeTime]').change(
@@ -138,183 +132,6 @@ $('input[type=radio][name=fadeTime]').change(
     });
 
 let transparencyDelta = (INTERVAL / 1000)  / fadeTime;
-
-var triangles = [
-    [{x:0, y:0},{x:0, y:720},{x:508, y:0}],
-    [{x:0, y:720},{x:508, y:720},{x:508, y:0}],
-    [{x:508, y:0},{x:1016, y:0},{x:1016, y:360}],
-    [{x:508, y:0},{x:508, y:360},{x:1016, y:360}],
-    [{x:1016, y:360},{x:1016, y:720},{x:762, y:720}],
-    [{x:762, y:360},{x:1016, y:360},{x:762, y:720}],
-    [{x:508, y:540},{x:508, y:720},{x:762, y:720}],
-    [{x:508, y:540},{x:762, y:540},{x:762, y:720}],
-    [{x:508, y:360},{x:635, y:360},{x:508, y:540}],
-    [{x:508, y:540},{x:635, y:360},{x:635, y:540}],
-    [{x:635, y:360},{x:762, y:360},{x:762, y:450}],
-    [{x:635, y:360},{x:762, y:450},{x:635, y:450}],
-    [{x:762, y:450},{x:762, y:540},{x:698.5, y:540}],
-    [{x:698.5, y:450},{x:762, y:450},{x:698.5, y:540}],
-    [{x:635, y:495},{x:698.5, y:540},{x:635, y:540}],
-    [{x:635, y:495},{x:698.5, y:495},{x:698.5, y:540}]
-];
-
-let bound = (scale, point, box) => {
-    box.left = box.left > scale * point.x ? scale * point.x : box.left;
-    box.right = box.right < scale * point.x ? scale * point.x : box.right;
-    box.top = box.top > scale * point.y ? scale * point.y : box.top;
-    box.bottom = box.bottom < scale * point.y ? scale * point.y : box.bottom;
-
-    return box;
-};
-
-let boundingBox = (scale, triangle) => {
-    let box = {
-        left: scale * triangle[0].x,
-        right: scale * triangle[0].x,
-        top: scale * triangle[0].y,
-        bottom: scale * triangle[0].y
-    }
-
-    bound(scale, triangle[1], box);
-    bound(scale, triangle[2], box);
-
-    return box;
-};
-
-let inBox = (position, box) => {
-    return position.x >= box.left
-        && position.x <= box.right
-        && position.y >= box.top
-        && position.y <= box.bottom;
-}
-
-
-class Inputs {
-    constructor(foreground) {
-        this.foreground = foreground;
-        this.mousePosition = undefined;
-
-        this.foreground.mousemove((event) =>{
-            this.mousePosition = this.saveMouse(event);
-        });
-
-        this.foreground.mouseleave(event => {
-            this.mousePosition = undefined;
-            transparency = 1.0;
-        });
-    }
-
-    saveMouse(event) {
-        let location = this.foreground.offset();
-        let x = event.pageX - location.left;
-        let y = event.pageY - location.top;
-
-        return {x: x, y: y};
-    }
-}
-
-let findTriangle = (scale, position, triangles) => {
-    let found = triangles.find(function(triangle) {
-        let result = false;
-        let box = boundingBox(scale, triangle);
-        if (inBox(position, box) && testTriangle(scale, box, triangle, position)) {
-            result = triangle;
-        }
-
-        return result;
-    })
-
-    return found;
-}
-
-let scaleTriangle = (scale, triangle) => {
-    return triangle.map(function(point) {
-        return {x: scale * point.x, y: scale * point.y};
-    })
-}
-
-let testTriangle = (scale, box, triangle, point) => {
-    let scaledTriangle = scaleTriangle(scale, triangle);
-    if (hasTopLeft(scaledTriangle, box)) {
-        if (hasBottomLeft(scaledTriangle, box)) {
-            if (hasTopRight(scaledTriangle, box)) {
-                return inTopLeft(point, box);
-            }
-            else {
-                return inBottomLeft(point, box);
-            }
-        }
-        else {
-            return inTopRight(point, box);
-        }
-    }
-    else {
-        return inBottomRight(point, box);
-    }
-}
-
-let hasTopLeft = (triangle, box) => {
-    return triangle.find(function(point) {
-        return Math.abs(point.x - box.left) < EPSILON
-            && Math.abs(point.y - box.top) < EPSILON;
-    })
-}
-
-let hasBottomLeft = (triangle, box) => {
-    return triangle.find(function(point) {
-        return Math.abs(point.x - box.left) < EPSILON
-            && Math.abs(point.y - box.bottom) < EPSILON;
-    })
-}
-
-let hasTopRight = (triangle, box) => {
-     return triangle.find(function(point) {
-        return Math.abs(point.x - box.right) < EPSILON
-            && Math.abs(point.y - box.top) < EPSILON;
-    })
-}
-
-let inTopLeft = (point, box) => {
-    let xRatio = (box.right - point.x) / (box.right - box.left);
-    let yRatio = (point.y - box.top) / (box.bottom - box.top);
-
-    let result = xRatio >= yRatio;
-    return result;
-}
-
-let inTopRight = (point, box) => {
-    let xRatio = (point.x - box.left) / (box.right - box.left);
-    let yRatio = (point.y - box.top) / (box.bottom - box.top);
-
-    let result =  xRatio >= yRatio;
-    return result;
-}
-
-let inBottomLeft = (point, box) => {
-    let xRatio = (box.right - point.x) / (box.right - box.left);
-    let yRatio = (box.bottom - point.y) / (box.bottom - box.top);
-
-    let result =  xRatio >= yRatio;
-
-    return result;
-}
-
-let inBottomRight = (point, box) => {
-    let xRatio = (box.right - point.x) / (box.right - box.left);
-    let yRatio = (point.y - box.top) / (box.bottom - box.top);
-
-    let result =  xRatio <= yRatio;
-
-    return result;
-}
-
-let makePath = (context, scale, triangle) => {
-    context.beginPath();
-    context.moveTo(triangle[0].x * scale, triangle[0].y * scale);
-    context.lineTo(triangle[1].x * scale, triangle[1].y * scale);
-    context.lineTo(triangle[2].x * scale, triangle[2].y * scale);
-    context.closePath();
-}
 
 class Edge {
     constructor(pointA, pointB) {
@@ -331,7 +148,7 @@ class Edge {
         }
     }
 
-    draw(context, scale) {
+    draw(context) {
         let dx = this.point0.x - this.point1.x;
         let dy = this.point0.y - this.point1.y;
 
@@ -345,58 +162,227 @@ class Edge {
         }
 
         context.beginPath();
-        context.moveTo(this.point0.x * scale, this.point0.y * scale);
-        context.lineTo(this.point1.x * scale, this.point1.y * scale);
+        context.moveTo(this.point0.x, this.point0.y);
+        context.lineTo(this.point1.x, this.point1.y);
         context.stroke();
 
         context.restore();
     }
 }
-let drawTriangle = (context, scale, triangle) => {
-    (new Edge(triangle[0], triangle[1])).draw(context, scale);
-    (new Edge(triangle[0], triangle[2])).draw(context, scale);
-    (new Edge(triangle[1], triangle[2])).draw(context, scale);
+
+class Triangle {
+    constructor(scale, triangle) {
+        this.triangle  = triangle.map(function(point) {
+            return {x: scale * point.x, y: scale * point.y};
+        });
+
+        this.box = this.boundingBox();
+
+        this.hasTopLeft = this.triangle.find(point => {
+            return Math.abs(point.x - this.box.left) < EPSILON
+                && Math.abs(point.y - this.box.top) < EPSILON;
+        });
+
+        this.hasBottomLeft = this.triangle.find(point => {
+            return Math.abs(point.x - this.box.left) < EPSILON
+                && Math.abs(point.y - this.box.bottom) < EPSILON;
+        });
+
+        this.hasTopRight = this.triangle.find(point => {
+            return Math.abs(point.x - this.box.right) < EPSILON
+                && Math.abs(point.y - this.box.top) < EPSILON;
+        });
+
+        this.transparency = 1.0;
+
+        this.edgeList = new Array();
+        this.edgeList.push(new Edge(this.triangle[0], this.triangle[1]));
+        this.edgeList.push(new Edge(this.triangle[0], this.triangle[2]));
+        this.edgeList.push(new Edge(this.triangle[1], this.triangle[2]));
+    }
+
+    bound (point, box) {
+        box.left = box.left > point.x ? point.x : box.left;
+        box.right = box.right < point.x ? point.x : box.right;
+        box.top = box.top > point.y ? point.y : box.top;
+        box.bottom = box.bottom < point.y ? point.y : box.bottom;
+
+        return box;
+    }
+
+    boundingBox(){
+        let box = {
+            left:  this.triangle[0].x,
+            right: this.triangle[0].x,
+            top: this.triangle[0].y,
+            bottom: this.triangle[0].y
+        }
+
+        this.bound(this.triangle[1], box);
+        this.bound(this.triangle[2], box);
+
+        return box;
+    }
+
+    inBox(point) {
+        return point.x >= this.box.left
+            && point.x <= this.box.right
+            && point.y >= this.box.top
+            && point.y <= this.box.bottom;
+    }
+
+    testPoint(point) {
+        if (point && this.inBox(point)) {
+            if (this.hasTopLeft) {
+                if (this.hasBottomLeft) {
+                    if (this.hasTopRight) {
+                        return this.inTopLeft(point);
+                    }
+                    else {
+                        return this.inBottomLeft(point);
+                    }
+                }
+                else {
+                    return this.inTopRight(point);
+                }
+            }
+            else {
+                return this.inBottomRight(point);
+            }
+        }
+        else {
+            return false;
+        }
+    }
+
+    inTopLeft(point) {
+        let xRatio = (this.box.right - point.x) / (this.box.right - this.box.left);
+        let yRatio = (point.y - this.box.top) / (this.box.bottom - this.box.top);
+
+        let result = xRatio >= yRatio;
+        return result;
+    }
+
+    inTopRight(point) {
+        let xRatio = (point.x - this.box.left) / (this.box.right - this.box.left);
+        let yRatio = (point.y - this.box.top) / (this.box.bottom - this.box.top);
+
+        let result =  xRatio >= yRatio;
+        return result;
+    }
+
+    inBottomLeft(point) {
+        let xRatio = (this.box.right - point.x) / (this.box.right - this.box.left);
+        let yRatio = (this.box.bottom - point.y) / (this.box.bottom - this.box.top);
+
+        let result =  xRatio >= yRatio;
+
+        return result;
+    }
+
+    inBottomRight(point) {
+        let xRatio = (this.box.right - point.x) / (this.box.right - this.box.left);
+        let yRatio = (point.y - this.box.top) / (this.box.bottom - this.box.top);
+
+        let result =  xRatio <= yRatio;
+
+        return result;
+    }
+
+    makePath (context) {
+        context.beginPath();
+        context.moveTo(this.triangle[0].x, this.triangle[0].y);
+        context.lineTo(this.triangle[1].x, this.triangle[1].y);
+        context.lineTo(this.triangle[2].x, this.triangle[2].y);
+        context.closePath();
+    }
+
+    draw(context, point) {
+        if (this.testPoint(point)) {
+            this.transparency = Math.max(0, this.transparency - transparencyDelta);
+        }
+        else {
+            this.transparency = Math.min(1.0, this.transparency + transparencyDelta);
+        }
+
+        this.makePath(context);
+        context.fillStyle = `rgba(255, 255, 255, ${this.transparency})`;
+        context.fill();
+
+        this.edgeList.forEach(edge => {
+            edge.draw(context);
+        });
+    }
+}
+
+let makeTriangles = scale =>{
+    let triangleList = [
+        new  Triangle(scale, [{x:635, y:495},{x:698.5, y:495},{x:698.5, y:540}]),
+        new  Triangle(scale, [{x:635, y:495},{x:698.5, y:540},{x:635, y:540}]),
+        new  Triangle(scale, [{x:698.5, y:450},{x:762, y:450},{x:698.5, y:540}]),
+        new  Triangle(scale, [{x:762, y:450},{x:762, y:540},{x:698.5, y:540}]),
+        new  Triangle(scale, [{x:635, y:360},{x:762, y:450},{x:635, y:450}]),
+        new  Triangle(scale, [{x:635, y:360},{x:762, y:360},{x:762, y:450}]),
+        new  Triangle(scale, [{x:508, y:540},{x:635, y:360},{x:635, y:540}]),
+        new  Triangle(scale, [{x:508, y:360},{x:635, y:360},{x:508, y:540}]),
+        new  Triangle(scale, [{x:508, y:540},{x:762, y:540},{x:762, y:720}]),
+        new  Triangle(scale, [{x:508, y:540},{x:508, y:720},{x:762, y:720}]),
+        new  Triangle(scale, [{x:762, y:360},{x:1016, y:360},{x:762, y:720}]),
+        new  Triangle(scale, [{x:1016, y:360},{x:1016, y:720},{x:762, y:720}]),
+        new  Triangle(scale, [{x:508, y:0},{x:508, y:360},{x:1016, y:360}]),
+        new  Triangle(scale, [{x:508, y:0},{x:1016, y:0},{x:1016, y:360}]),
+        new  Triangle(scale, [{x:0, y:720},{x:508, y:720},{x:508, y:0}]),
+        new  Triangle(scale, [{x:0, y:0},{x:0, y:720},{x:508, y:0}])
+    ];
+
+    return triangleList;
+}
+
+
+
+class Inputs {
+    constructor(foreground) {
+        this.foreground = foreground;
+        this.mousePosition = undefined;
+
+        this.foreground.mousemove((event) =>{
+            this.mousePosition = this.saveMouse(event);
+        });
+
+        this.foreground.mouseleave(event => {
+            this.mousePosition = undefined;
+        });
+    }
+
+    saveMouse(event) {
+        let location = this.foreground.offset();
+        let x = event.pageX - location.left;
+        let y = event.pageY - location.top;
+
+        return {x: x, y: y};
+    }
 }
 
 let fore = $("#foreground");
 let inputs = new Inputs(fore);
+
+let canvas = document.getElementById("drawing");
+canvas.width = $("#background").width();
+canvas.height = $("#background").height();
+
+let triangleList = makeTriangles(canvas.width / FULL_WIDTH);
+
 $(window).resize(event => {
     canvas.width = $("#background").width();
     canvas.height = $("#background").height();
-    scale = canvas.width / FULL_WIDTH;
+    triangleList = makeTriangles(canvas.width / FULL_WIDTH);
 });
-
-let previous = undefined;
-let transparency = 1.0;
 
 setInterval (() => {
     let context = canvas.getContext("2d");
-    context.fillStyle = "rgba(255, 255, 255, 1.0)";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    triangles.forEach((triangle) => {
-            drawTriangle(context,scale, triangle);
-        }
-    );
+    context.clearRect(0, 0, canvas.width, canvas.height);
 
-    let position = inputs.mousePosition;
-    if (position) {
-        let triangle = findTriangle(scale, position, triangles);
-        if (triangle) {
-            if (triangle === previous) {
-                transparency = Math.max(0, transparency - transparencyDelta);
-            }
-            else {
-                transparency = 1.0;
-                previous = triangle;
-            }
-
-            context.fillStyle = `rgba(255, 255, 255, ${transparency})`;
-            makePath(context, scale, triangle);
-            context.save();
-            context.clip();
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            context.fillRect(0, 0, canvas.width, canvas.height);
-            context.restore();
-        }
-    }
+    triangleList.forEach((triangle) => {
+        triangle.draw(context, inputs.mousePosition);
+    });
 }, INTERVAL);
