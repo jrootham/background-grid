@@ -119,6 +119,10 @@ if (!Array.prototype.map) {
     };
 }
 
+const MAX_X = 1016;
+const MAX_Y = 762;
+const RATIO = MAX_X / MAX_Y;
+
 const EPSILON = 0.000001;
 const INTERVAL = 20;
 
@@ -370,11 +374,11 @@ class Triangle {
         context.save();
 
         context.globalAlpha = this.fromShow;
-        context.drawImage(this.fromImage, 0, 0, canvas.width, canvas.width / 2);
+        context.drawImage(this.fromImage, 0, 0, canvas.width, canvas.width * RATIO);
         context.restore();
 
         context.globalAlpha = this.toShow;
-        context.drawImage(this.toImage, 0, 0, canvas.width, canvas.width / 2);
+        context.drawImage(this.toImage, 0, 0, canvas.width, canvas.width * RATIO);
 
         context.restore();
 
@@ -533,7 +537,7 @@ let make = () => {
     canvas.width = $("#background").width();
     canvas.height = $("#background").height();
 
-    return makeTriangles(canvas.width / two_d.width);
+    return makeTriangles(canvas.width / MAX_X);
 }
 
 let triangleList = make();
