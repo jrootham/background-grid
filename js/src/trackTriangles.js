@@ -204,12 +204,12 @@ class Triangle {
         }
         else {
             if (twoDOutside === outside) {
-                this.fromImage = threeD;
-                this.toImage = twoD;
-            }
-            else {
                 this.fromImage = twoD;
                 this.toImage = threeD;
+            }
+            else {
+                this.fromImage = threeD;
+                this.toImage = twoD;
             }
         }
 
@@ -370,11 +370,11 @@ class Triangle {
         context.save();
 
         context.globalAlpha = this.fromShow;
-        context.drawImage(this.fromImage, 0, 0, canvas.width, canvas.height);
+        context.drawImage(this.fromImage, 0, 0, canvas.width, canvas.width / 2);
         context.restore();
 
         context.globalAlpha = this.toShow;
-        context.drawImage(this.toImage, 0, 0, canvas.width, canvas.height);
+        context.drawImage(this.toImage, 0, 0, canvas.width, canvas.width / 2);
 
         context.restore();
 
