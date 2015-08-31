@@ -7,34 +7,39 @@
     <script type="text/javascript" src="../js/jquery-1.10.2.min.js"></script>
 </head>
 <body>
+<img id="images">
+    <img id="two_d" src="../images/vignelli-images-map-all.gif" alt="2 D" />
+    <img id="three_d" src="../images/vignelli-images-3d-all.gif" alt="3 D" />
+</div>
 <h1>Track</h1>
-Fade in time (seconds)
+Crossfade time (seconds)
 <div>
-    <input type="radio" name="fadeInTime" value="1" checked>1</input>
-    <input type="radio" name="fadeInTime" value="2">2</input>
-    <input type="radio" name="fadeInTime" value="4">4</input>
-    <input type="radio" name="fadeInTime" value="8">8</input>
-    <input type="radio" name="fadeInTime" value="16">16</input>
+    <input type="radio" name="crossFadeTime" value="0.25">0.25</input>
+    <input type="radio" name="crossFadeTime" value="0.5">0.5</input>
+    <input type="radio" name="crossFadeTime" value="0.75">0.75</input>
+    <input type="radio" name="crossFadeTime" value="1.0" checked>1.0</input>
+    <input type="radio" name="crossFadeTime" value="1.25">1.25</input>
+    <input type="radio" name="crossFadeTime" value="1.5">1.5</input>
+    <input type="radio" name="crossFadeTime" value="1.75">`.75</input>
+    <input type="radio" name="crossFadeTime" value="2">2.0</input>
 </div>
 
-Fade out time (seconds)
+Start state
 <div>
-    <input type="radio" name="fadeOutTime" value="1" checked>1</input>
-    <input type="radio" name="fadeOutTime" value="2">2</input>
-    <input type="radio" name="fadeOutTime" value="4">4</input>
-    <input type="radio" name="fadeOutTime" value="8">8</input>
-    <input type="radio" name="fadeOutTime" value="16">16</input>
+    <input type="radio" name="blank" value="true" checked>Blank</input>
+    <input type="radio" name="blank" value="false">Both</input>
+</div>
+<div>
+    <input type="radio" name="twoDOutside" value="true" checked>2D outside</input>
+    <input type="radio" name="twoDOutside" value="false">3D outside</input>
 </div>
 
 <div>Move the mouse around the background.</div>
 
 <div id="container">
-    <div id="contents">
-        <div>Contents</div>
-        This is the contents level, it has the stuff you want to display.
-        It will show up in triangles when they get hovered over.
+    <div id="background">
     </div>
-    <div id="background"><canvas id="drawing"></canvas></div>
+    <div id="middleground"><canvas id="drawing"></canvas></div>
     <div id="foreground"></div>
 
 </div>

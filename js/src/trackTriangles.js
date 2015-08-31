@@ -5,6 +5,7 @@
  *
  * Copyright © 2014 Jim Rootham
  */
+
 if (!Array.prototype.find) {
     Array.prototype.find = function(predicate) {
         if (this == null) {
@@ -118,28 +119,39 @@ if (!Array.prototype.map) {
     };
 }
 
-const FULL_WIDTH = 1016;
 const EPSILON = 0.000001;
 const INTERVAL = 20;
 
-let fadeInTime = parseInt($("input[name=fadeInTime]:checked").val());
-let inTransparencyDelta = (INTERVAL / 1000)  / fadeInTime;
+let canvas = document.getElementById("drawing");
 
-$('input[type=radio][name=fadeInTime]').change(
+let crossFadeTime = parseInt($("input[name=crossFadeTime]:checked").val());
+let crossFadeDelta = (INTERVAL / 1000)  / crossFadeTime;
+
+$('input[type=radio][name=crossFadeTime]').change(
     function() {
-        fadeInTime = parseInt(this.value);
-        inTransparencyDelta = (INTERVAL / 1000)  / fadeInTime;
+        crossFadeTime = parseInt(this.value);
+        crossFadeDelta = (INTERVAL / 1000)  / crossFadeTime;
     });
 
-let fadeOutTime = parseInt($("input[name=fadeOutTime]:checked").val());
-let outTransparencyDelta = (INTERVAL / 1000)  / fadeOutTime;
+let blank = "true" === $("input[name=blank]:checked").val();
 
-$('input[type=radio][name=fadeOutTime]').change(
+$('input[type=radio][name=blank]').change(
     function() {
-        fadeOutTime = parseInt(this.value);
-        outTransparencyDelta = (INTERVAL / 1000)  / fadeOutTime;
+        blank = "true" === this.value;
+        triangleList = make();
     });
 
+
+let twoDOutside = "true" === $("input[name=twoDOutside]:checked").val();
+
+$('input[type=radio][name=twoDOutside]').change(
+    function() {
+        twoDOutside = "true" === this.value;
+        triangleList = make();
+    });
+
+let twoD = document.getElementById("two_d");
+let threeD = document.getElementById("three_d");
 
 class Edge {
     constructor(pointA, pointB) {
@@ -179,7 +191,30 @@ class Edge {
 }
 
 class Triangle {
-    constructor(scale, triangle) {
+    constructor(scale, outside, triangle, startBlank, twoDOutside) {
+        this.newPoint = true;
+        this.fromShow = 0.0;
+        this.toShow = 1.0;
+
+        if (startBlank) {
+            this.fromShow = 0.0;
+            this.toShow = 0.0;
+            this.fromImage = twoD;
+            this.toImage = threeD;
+        }
+        else {
+            if (twoDOutside === outside) {
+                this.fromImage = threeD;
+                this.toImage = twoD;
+            }
+            else {
+                this.fromImage = twoD;
+                this.toImage = threeD;
+            }
+        }
+
+        this.outside = outside;
+
         this.triangle  = triangle.map(function(point) {
             return {x: scale * point.x, y: scale * point.y};
         });
@@ -201,12 +236,11 @@ class Triangle {
                 && Math.abs(point.y - this.box.top) < EPSILON;
         });
 
-        this.transparency = 1.0;
-
-        this.edgeList = new Array();
-        this.edgeList.push(new Edge(this.triangle[0], this.triangle[1]));
-        this.edgeList.push(new Edge(this.triangle[0], this.triangle[2]));
-        this.edgeList.push(new Edge(this.triangle[1], this.triangle[2]));
+        this.edgeList = [
+            new Edge(this.triangle[0], this.triangle[1]),
+            new Edge(this.triangle[0], this.triangle[2]),
+            new Edge(this.triangle[1], this.triangle[2])
+        ];
     }
 
     bound (point, box) {
@@ -297,25 +331,52 @@ class Triangle {
         return result;
     }
 
-    makePath (context) {
+    makeClip (context) {
         context.beginPath();
         context.moveTo(this.triangle[0].x, this.triangle[0].y);
         context.lineTo(this.triangle[1].x, this.triangle[1].y);
         context.lineTo(this.triangle[2].x, this.triangle[2].y);
         context.closePath();
+        context.clip();
+    }
+
+    lower(current) {
+        return Math.max(0, current - crossFadeDelta);
+    }
+
+    raise (current) {
+        return Math.min(1.0, current + crossFadeDelta);
     }
 
     draw(context, point) {
         if (this.testPoint(point)) {
-            this.transparency = Math.max(0, this.transparency - inTransparencyDelta);
+            if (this.newPoint) {
+                this.newPoint = false;
+                this.fromShow = 1.0;
+                this.toShow = 0.0;
+                [this.fromImage, this.toImage] = [this.toImage, this.fromImage];
+            }
         }
         else {
-            this.transparency = Math.min(1.0, this.transparency + outTransparencyDelta);
+            this.newPoint = true;
         }
 
-        this.makePath(context);
-        context.fillStyle = `rgba(255, 255, 255, ${this.transparency})`;
-        context.fill();
+        this.fromShow = this.lower(this.fromShow);
+        this.toShow = this.raise(this.toShow);
+
+        context.save();
+
+        this.makeClip(context);
+        context.save();
+
+        context.globalAlpha = this.fromShow;
+        context.drawImage(this.fromImage, 0, 0, canvas.width, canvas.height);
+        context.restore();
+
+        context.globalAlpha = this.toShow;
+        context.drawImage(this.toImage, 0, 0, canvas.width, canvas.height);
+
+        context.restore();
 
         this.edgeList.forEach(edge => {
             edge.draw(context);
@@ -325,28 +386,122 @@ class Triangle {
 
 let makeTriangles = scale =>{
     let triangleList = [
-        new  Triangle(scale, [{x:635, y:495},{x:698.5, y:495},{x:698.5, y:540}]),
-        new  Triangle(scale, [{x:635, y:495},{x:698.5, y:540},{x:635, y:540}]),
-        new  Triangle(scale, [{x:698.5, y:450},{x:762, y:450},{x:698.5, y:540}]),
-        new  Triangle(scale, [{x:762, y:450},{x:762, y:540},{x:698.5, y:540}]),
-        new  Triangle(scale, [{x:635, y:360},{x:762, y:450},{x:635, y:450}]),
-        new  Triangle(scale, [{x:635, y:360},{x:762, y:360},{x:762, y:450}]),
-        new  Triangle(scale, [{x:508, y:540},{x:635, y:360},{x:635, y:540}]),
-        new  Triangle(scale, [{x:508, y:360},{x:635, y:360},{x:508, y:540}]),
-        new  Triangle(scale, [{x:508, y:540},{x:762, y:540},{x:762, y:720}]),
-        new  Triangle(scale, [{x:508, y:540},{x:508, y:720},{x:762, y:720}]),
-        new  Triangle(scale, [{x:762, y:360},{x:1016, y:360},{x:762, y:720}]),
-        new  Triangle(scale, [{x:1016, y:360},{x:1016, y:720},{x:762, y:720}]),
-        new  Triangle(scale, [{x:508, y:0},{x:508, y:360},{x:1016, y:360}]),
-        new  Triangle(scale, [{x:508, y:0},{x:1016, y:0},{x:1016, y:360}]),
-        new  Triangle(scale, [{x:0, y:720},{x:508, y:720},{x:508, y:0}]),
-        new  Triangle(scale, [{x:0, y:0},{x:0, y:720},{x:508, y:0}])
+        new  Triangle(
+            scale,
+            true,
+            [{x:635, y:495},{x:698.5, y:495},{x:698.5, y:540}],
+            blank,
+            twoDOutside
+        ),
+        new  Triangle(
+            scale,
+            false,
+            [{x:635, y:495},{x:698.5, y:540},{x:635, y:540}],
+            blank,
+            twoDOutside
+        ),
+        new  Triangle(
+            scale,
+            true,
+            [{x:698.5, y:450},{x:762, y:450},{x:698.5, y:540}],
+            blank,
+            twoDOutside
+        ),
+        new  Triangle(
+            scale,
+            false,
+            [{x:762, y:450},{x:762, y:540},{x:698.5, y:540}],
+            blank,
+            twoDOutside
+        ),
+        new  Triangle(
+            scale,
+            true,
+            [{x:635, y:360},{x:762, y:450},{x:635, y:450}],
+            blank,
+            twoDOutside
+        ),
+        new  Triangle(
+            scale,
+            false,
+            [{x:635, y:360},{x:762, y:360},{x:762, y:450}],
+            blank,
+            twoDOutside
+        ),
+        new  Triangle(
+            scale,
+            true,
+            [{x:508, y:540},{x:635, y:360},{x:635, y:540}],
+            blank,
+            twoDOutside
+        ),
+        new  Triangle(
+            scale,
+            false,
+            [{x:508, y:360},{x:635, y:360},{x:508, y:540}],
+            blank,
+            twoDOutside
+        ),
+        new  Triangle(
+            scale,
+            true,
+            [{x:508, y:540},{x:762, y:540},{x:762, y:720}],
+            blank,
+            twoDOutside
+        ),
+        new  Triangle(
+            scale,
+            false,
+            [{x:508, y:540},{x:508, y:720},{x:762, y:720}],
+            blank,
+            twoDOutside
+        ),
+        new  Triangle(
+            scale,
+            true,
+            [{x:762, y:360},{x:1016, y:360},{x:762, y:720}],
+            blank,
+            twoDOutside
+        ),
+        new  Triangle(
+            scale,
+            false,
+            [{x:1016, y:360},{x:1016, y:720},{x:762, y:720}],
+            blank,
+            twoDOutside
+        ),
+        new  Triangle(
+            scale,
+            true,
+            [{x:508, y:0},{x:508, y:360},{x:1016, y:360}],
+            blank,
+            twoDOutside
+        ),
+        new  Triangle(
+            scale,
+            false,
+            [{x:508, y:0},{x:1016, y:0},{x:1016, y:360}],
+            blank,
+            twoDOutside
+        ),
+        new  Triangle(
+            scale,
+            true,
+            [{x:0, y:720},{x:508, y:720},{x:508, y:0}],
+            blank,
+            twoDOutside
+        ),
+        new  Triangle(
+            scale,
+            false,
+            [{x:0, y:0},{x:0, y:720},{x:508, y:0}],
+            blank,
+            twoDOutside
+        )
     ];
 
     return triangleList;
 }
-
-
 
 class Inputs {
     constructor(foreground) {
@@ -374,16 +529,17 @@ class Inputs {
 let fore = $("#foreground");
 let inputs = new Inputs(fore);
 
-let canvas = document.getElementById("drawing");
-canvas.width = $("#background").width();
-canvas.height = $("#background").height();
-
-let triangleList = makeTriangles(canvas.width / FULL_WIDTH);
-
-$(window).resize(event => {
+let make = () => {
     canvas.width = $("#background").width();
     canvas.height = $("#background").height();
-    triangleList = makeTriangles(canvas.width / FULL_WIDTH);
+
+    return makeTriangles(canvas.width / two_d.width);
+}
+
+let triangleList = make();
+
+$(window).resize(event => {
+    triangleList = make();
 });
 
 setInterval (() => {
@@ -394,3 +550,4 @@ setInterval (() => {
         triangle.draw(context, inputs.mousePosition);
     });
 }, INTERVAL);
+
