@@ -124,12 +124,12 @@ const INTERVAL = 20;
 
 let canvas = document.getElementById("drawing");
 
-let crossFadeTime = parseInt($("input[name=crossFadeTime]:checked").val());
+let crossFadeTime = parseFloat($("input[name=crossFadeTime]:checked").val());
 let crossFadeDelta = (INTERVAL / 1000)  / crossFadeTime;
 
 $('input[type=radio][name=crossFadeTime]').change(
     function() {
-        crossFadeTime = parseInt(this.value);
+        crossFadeTime = parseFloat(this.value);
         crossFadeDelta = (INTERVAL / 1000)  / crossFadeTime;
     });
 

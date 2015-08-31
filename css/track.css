@@ -2,7 +2,7 @@
 {
     position:           absolute;
     z-index:            -10;
-    width:              80vw;
+    width:              100vw;
     height:             720px;
     background-color:   white;
 }
@@ -18,7 +18,7 @@
 {
     position:           absolute;
     z-index:            10;
-    width:              80vw;
+    width:              100vw;
     height:             720px;
     background-color:   transparent;
 }
@@ -27,7 +27,7 @@
 {
     position:           absolute;
     z-index:            0;
-    width:              80vw;
+    width:              100vw;
     height:             720px;
     background-color:   transparent;
 }
