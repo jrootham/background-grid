@@ -119,8 +119,8 @@ if (!Array.prototype.map) {
     };
 }
 
-const MAX_X = 1016;
-const MAX_Y = 762;
+const MAX_X = 1440;
+const MAX_Y = 1020;
 const RATIO = MAX_X / MAX_Y;
 
 const EPSILON = 0.000001;
@@ -365,8 +365,10 @@ class Triangle {
             this.newPoint = true;
         }
 
-        this.fromShow = this.lower(this.fromShow);
-        this.toShow = this.raise(this.toShow);
+        if (this.fromShow > 0.0 || this.toShow > 0.0) {
+            this.fromShow = this.lower(this.fromShow);
+            this.toShow = this.raise(this.toShow);
+        }
 
         context.save();
 
@@ -374,11 +376,11 @@ class Triangle {
         context.save();
 
         context.globalAlpha = this.fromShow;
-        context.drawImage(this.fromImage, 0, 0, canvas.width, canvas.width * RATIO);
+        context.drawImage(this.fromImage, 0, 0, canvas.width, canvas.width / RATIO);
         context.restore();
 
         context.globalAlpha = this.toShow;
-        context.drawImage(this.toImage, 0, 0, canvas.width, canvas.width * RATIO);
+        context.drawImage(this.toImage, 0, 0, canvas.width, canvas.width / RATIO);
 
         context.restore();
 
@@ -393,112 +395,112 @@ let makeTriangles = scale =>{
         new  Triangle(
             scale,
             true,
-            [{x:635, y:495},{x:698.5, y:495},{x:698.5, y:540}],
+            [{x:985, y:765},{x:890, y:765},{x:890, y:698.75}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             false,
-            [{x:635, y:495},{x:698.5, y:540},{x:635, y:540}],
+            [{x:985, y:765},{x:985, y:698.75},{x:890, y:698.75}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             true,
-            [{x:698.5, y:450},{x:762, y:450},{x:698.5, y:540}],
+            [{x:1080, y:632.5},{x:985, y:632.5},{x:985, y:765}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             false,
-            [{x:762, y:450},{x:762, y:540},{x:698.5, y:540}],
+            [{x:1080, y:632.5},{x:1080, y:765},{x:985, y:765}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             true,
-            [{x:635, y:360},{x:762, y:450},{x:635, y:450}],
+            [{x:890, y:510},{x:1080, y:510},{x:1080, y:632.5}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             false,
-            [{x:635, y:360},{x:762, y:360},{x:762, y:450}],
+            [{x:890, y:510},{x:890, y:632.5},{x:1080, y:632.5}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             true,
-            [{x:508, y:540},{x:635, y:360},{x:635, y:540}],
+            [{x:720, y:765},{x:720, y:510},{x:890, y:510}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             false,
-            [{x:508, y:360},{x:635, y:360},{x:508, y:540}],
+            [{x:720, y:765},{x:890, y:765},{x:890, y:510}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             true,
-            [{x:508, y:540},{x:762, y:540},{x:762, y:720}],
+            [{x:1080, y:1020},{x:1080, y:765},{x:720, y:765}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             false,
-            [{x:508, y:540},{x:508, y:720},{x:762, y:720}],
+            [{x:1080, y:1020},{x:720, y:1020},{x:720, y:765}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             true,
-            [{x:762, y:360},{x:1016, y:360},{x:762, y:720}],
+            [{x:1440, y:1020},{x:1080, y:1020},{x:1080, y:510}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             false,
-            [{x:1016, y:360},{x:1016, y:720},{x:762, y:720}],
+            [{x:1440, y:510},{x:1440, y:1020},{x:1080, y:510}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             true,
-            [{x:508, y:0},{x:508, y:360},{x:1016, y:360}],
+            [{x:1440, y:510},{x:720, y:510},{x:720, y:0}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             false,
-            [{x:508, y:0},{x:1016, y:0},{x:1016, y:360}],
+            [{x:720, y:0},{x:1440, y:0},{x:1440, y:510}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             true,
-            [{x:0, y:720},{x:508, y:720},{x:508, y:0}],
+            [{x:0, y:1020},{x:720, y:1020},{x:720, y:0}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             false,
-            [{x:0, y:0},{x:0, y:720},{x:508, y:0}],
+            [{x:0, y:0},{x:0, y:1020},{x:720, y:0}],
             blank,
             twoDOutside
         )
