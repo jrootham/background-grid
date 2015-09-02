@@ -395,56 +395,56 @@ let makeTriangles = scale =>{
         new  Triangle(
             scale,
             true,
-            [{x:985, y:765},{x:890, y:765},{x:890, y:698.75}],
+            [{x:990, y:765},{x:900, y:765},{x:900, y:701.25}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             false,
-            [{x:985, y:765},{x:985, y:698.75},{x:890, y:698.75}],
+            [{x:990, y:765},{x:990, y:701.25},{x:900, y:701.25}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             true,
-            [{x:1080, y:632.5},{x:985, y:632.5},{x:985, y:765}],
+            [{x:1080, y:637.5},{x:990, y:637.5},{x:990, y:765}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             false,
-            [{x:1080, y:632.5},{x:1080, y:765},{x:985, y:765}],
+            [{x:1080, y:637.5},{x:1080, y:765},{x:990, y:765}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             true,
-            [{x:890, y:510},{x:1080, y:510},{x:1080, y:632.5}],
+            [{x:900, y:510},{x:1080, y:510},{x:1080, y:637.5}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             false,
-            [{x:890, y:510},{x:890, y:632.5},{x:1080, y:632.5}],
+            [{x:900, y:510},{x:900, y:637.5},{x:1080, y:637.5}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             true,
-            [{x:720, y:765},{x:720, y:510},{x:890, y:510}],
+            [{x:720, y:765},{x:720, y:510},{x:900, y:510}],
             blank,
             twoDOutside
         ),
         new  Triangle(
             scale,
             false,
-            [{x:720, y:765},{x:890, y:765},{x:890, y:510}],
+            [{x:720, y:765},{x:900, y:765},{x:900, y:510}],
             blank,
             twoDOutside
         ),
