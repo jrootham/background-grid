@@ -157,6 +157,59 @@ $('input[type=radio][name=twoDOutside]').change(
 let twoD = document.getElementById("two_d");
 let threeD = document.getElementById("three_d");
 
+class BoxList {
+    constructor (specList) {
+        this.boxList = [
+            new boxUpOutide(specList[0])
+        ]
+    }
+}
+
+class Box {
+    constructor(scale, spec) {
+        this.topLeftX = scale * spec.topLeft.x;
+        this.topLeftY = scale * spec.topLeft.y;
+        this.bottomRightX = scale * spec.bottomRight.x;
+        this.bottomRightY = scale * spec.bottomRight.y;
+    }
+}
+
+class BoxUp extends Box{
+    constructor(scale, spec) {
+        super(scale, spec);
+    }
+}
+
+class BoxDown extends Box{
+    constructor(scale, spec) {
+        super(scale, spec);
+    }
+}
+
+class BoxUpInside extends BoxUp{
+    constructor(scale, spec) {
+        super(scale, spec);
+    }
+}
+
+class BoxDownInside extends BoxDown{
+    constructor(scale, spec) {
+        super(scale, spec);
+    }
+}
+
+class BoxUpOutside extends BoxUp{
+    constructor(scale, spec) {
+        super(scale, spec);
+    }
+}
+
+class BoxDownOutside extends BoxDown{
+    constructor(scale, spec) {
+        super(scale, spec);
+    }
+}
+
 class Edge {
     constructor(pointA, pointB) {
 
@@ -390,11 +443,10 @@ class Triangle {
     }
 }
 
-let makeTriangles = scale =>{
-    let triangleList = [
-        new  Triangle(
+let makeBoxes = scale =>{
+    let boxList = [
+        new  Box(
             scale,
-            true,
             [{x:990, y:765},{x:900, y:765},{x:900, y:701.25}],
             blank,
             twoDOutside
@@ -406,7 +458,7 @@ let makeTriangles = scale =>{
             blank,
             twoDOutside
         ),
-        new  Triangle(
+        new  Box(
             scale,
             true,
             [{x:1080, y:637.5},{x:990, y:637.5},{x:990, y:765}],
@@ -420,7 +472,7 @@ let makeTriangles = scale =>{
             blank,
             twoDOutside
         ),
-        new  Triangle(
+        new  Box(
             scale,
             true,
             [{x:900, y:510},{x:1080, y:510},{x:1080, y:637.5}],
@@ -434,7 +486,7 @@ let makeTriangles = scale =>{
             blank,
             twoDOutside
         ),
-        new  Triangle(
+        new  Box(
             scale,
             true,
             [{x:720, y:765},{x:720, y:510},{x:900, y:510}],
@@ -448,7 +500,7 @@ let makeTriangles = scale =>{
             blank,
             twoDOutside
         ),
-        new  Triangle(
+        new  Box(
             scale,
             true,
             [{x:1080, y:1020},{x:1080, y:765},{x:720, y:765}],
@@ -462,7 +514,7 @@ let makeTriangles = scale =>{
             blank,
             twoDOutside
         ),
-        new  Triangle(
+        new  Box(
             scale,
             true,
             [{x:1440, y:1020},{x:1080, y:1020},{x:1080, y:510}],
@@ -476,7 +528,7 @@ let makeTriangles = scale =>{
             blank,
             twoDOutside
         ),
-        new  Triangle(
+        new  Box(
             scale,
             true,
             [{x:1440, y:510},{x:720, y:510},{x:720, y:0}],
@@ -490,7 +542,7 @@ let makeTriangles = scale =>{
             blank,
             twoDOutside
         ),
-        new  Triangle(
+        new  Box(
             scale,
             true,
             [{x:0, y:1020},{x:720, y:1020},{x:720, y:0}],
@@ -506,7 +558,7 @@ let makeTriangles = scale =>{
         )
     ];
 
-    return triangleList;
+    return boxList;
 }
 
 class Inputs {
