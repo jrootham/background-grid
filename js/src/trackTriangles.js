@@ -122,6 +122,9 @@ if (!Array.prototype.map) {
 const MAX_X = 1440;
 const MAX_Y = 1020;
 const RATIO = MAX_X / MAX_Y;
+const DASH_COLOUR = "blue";
+const DASH_DASH = 5;
+const DASH_EMPTY = 5;
 
 const EPSILON = 0.000001;
 const INTERVAL = 20;
@@ -142,7 +145,7 @@ let blank = "true" === $("input[name=blank]:checked").val();
 $('input[type=radio][name=blank]').change(
     function() {
         blank = "true" === this.value;
-        triangleList = make();
+        boxContainer = make();
     });
 
 
@@ -151,65 +154,132 @@ let twoDOutside = "true" === $("input[name=twoDOutside]:checked").val();
 $('input[type=radio][name=twoDOutside]').change(
     function() {
         twoDOutside = "true" === this.value;
-        triangleList = make();
+        boxContainer = make();
     });
 
 let twoD = document.getElementById("two_d");
 let threeD = document.getElementById("three_d");
 
-class BoxList {
-    constructor (specList) {
+class BoxContainer {
+    constructor (scale, specList) {
+        this.twoDOutside = twoDOutside;
+        this.blank = blank;
+        this.twoD = twoD;
+        this.threeD = threeD;
+
+        this.scale = scale;
+
         this.boxList = [
-            new boxUpOutide(specList[0])
+            new BoxUpOutside(this, specList[0]),
+            new BoxDownOutside(this, specList[1]),
+            new BoxUpInside(this, specList[2]),
+            new BoxDownInside(this, specList[3]),
+            new BoxUpOutside(this, specList[4]),
+            new BoxDownOutside(this, specList[5]),
+            new BoxUpInside(this, specList[6]),
+            new BoxDownInside(this, specList[7])
         ]
+    }
+
+    draw(context, mousePosition) {
+        this.boxList.forEach(box => {
+                box.draw(context, mousePosition);
+            }
+        )
     }
 }
 
 class Box {
-    constructor(scale, spec) {
-        this.topLeftX = scale * spec.topLeft.x;
-        this.topLeftY = scale * spec.topLeft.y;
-        this.bottomRightX = scale * spec.bottomRight.x;
-        this.bottomRightY = scale * spec.bottomRight.y;
+    constructor(parent, spec) {
+        this.topLeftX = parent.scale * spec.topLeft.x;
+        this.topLeftY = parent.scale * spec.topLeft.y;
+        this.deltaX = parent.scale * spec.delta.x;
+        this.deltaY = parent.scale * spec.delta.y;
+    }
+
+    inBox(point) {
+        return point.x >= this.topLeftX
+            && point.x <= this.topLeftX + this.deltaX
+            && point.y >= this.topLeftY
+            && point.y <= this.topLeftY + this.deltaY;
+    }
+
+    draw(context, mousePosition) {
+        context.strokeStyle = "black";
+        context.strokeRect(this.topLeftX, this.topLeftY, this.deltaX, this.deltaY);
+        this.diagonal(context);
+    }
+
+    diagonalDraw(context, fromX, fromY, toX, toY) {
+        context.save();
+        context.strokeStyle = DASH_COLOUR;
+        context.setLineDash([DASH_DASH, DASH_EMPTY]);
+        context.beginPath();
+        context.moveTo(fromX, fromY);
+        context.lineTo(toX, toY);
+        context.stroke();
+        context.restore();
     }
 }
 
 class BoxUp extends Box{
-    constructor(scale, spec) {
-        super(scale, spec);
+    constructor(parent, spec) {
+        super(parent, spec);
+    }
+
+    diagonal(context) {
+        this.diagonalDraw(context,
+            this.topLeftX, this.topLeftY + this.deltaY,
+            this.topLeftX + this.deltaX, this.topLeftY);
     }
 }
 
 class BoxDown extends Box{
-    constructor(scale, spec) {
-        super(scale, spec);
+    constructor(parent, spec) {
+        super(parent, spec);
+    }
+
+    diagonal(context) {
+        this.diagonalDraw(context,
+            this.topLeftX, this.topLeftY,
+            this.topLeftX + this.deltaX, this.topLeftY + this.deltaY);
     }
 }
 
 class BoxUpInside extends BoxUp{
-    constructor(scale, spec) {
-        super(scale, spec);
+    constructor(parent, spec) {
+        super(parent, spec);
     }
 }
 
 class BoxDownInside extends BoxDown{
-    constructor(scale, spec) {
-        super(scale, spec);
+    constructor(parent, spec) {
+        super(parent, spec);
     }
 }
 
 class BoxUpOutside extends BoxUp{
-    constructor(scale, spec) {
-        super(scale, spec);
+    constructor(parent, spec) {
+        super(parent, spec);
     }
 }
 
 class BoxDownOutside extends BoxDown{
-    constructor(scale, spec) {
-        super(scale, spec);
+    constructor(parent, spec) {
+        super(parent, spec);
     }
 }
 
+let specList = [
+    {topLeft:{x:0, y:0}, delta:{x:720, y:1020}},
+    {topLeft:{x:720, y:0}, delta:{x:720, y:510}},
+    {topLeft:{x:1080, y:510}, delta:{x:360, y:510}},
+    {topLeft:{x:720, y:765}, delta:{x:360, y:255}},
+    {topLeft:{x:720, y:510}, delta:{x:180, y:255}},
+    {topLeft:{x:900, y:510}, delta:{x:180, y:127.5}},
+    {topLeft:{x:990, y:637.5}, delta:{x:90, y:127.5}},
+    {topLeft:{x:900, y:701.25}, delta:{x:90, y:63.75}},
+]
 class Edge {
     constructor(pointA, pointB) {
 
@@ -321,13 +391,6 @@ class Triangle {
         this.bound(this.triangle[2], box);
 
         return box;
-    }
-
-    inBox(point) {
-        return point.x >= this.box.left
-            && point.x <= this.box.right
-            && point.y >= this.box.top
-            && point.y <= this.box.bottom;
     }
 
     testPoint(point) {
@@ -445,117 +508,22 @@ class Triangle {
 
 let makeBoxes = scale =>{
     let boxList = [
-        new  Box(
-            scale,
             [{x:990, y:765},{x:900, y:765},{x:900, y:701.25}],
-            blank,
-            twoDOutside
-        ),
-        new  Triangle(
-            scale,
-            false,
             [{x:990, y:765},{x:990, y:701.25},{x:900, y:701.25}],
-            blank,
-            twoDOutside
-        ),
-        new  Box(
-            scale,
-            true,
             [{x:1080, y:637.5},{x:990, y:637.5},{x:990, y:765}],
-            blank,
-            twoDOutside
-        ),
-        new  Triangle(
-            scale,
-            false,
             [{x:1080, y:637.5},{x:1080, y:765},{x:990, y:765}],
-            blank,
-            twoDOutside
-        ),
-        new  Box(
-            scale,
-            true,
             [{x:900, y:510},{x:1080, y:510},{x:1080, y:637.5}],
-            blank,
-            twoDOutside
-        ),
-        new  Triangle(
-            scale,
-            false,
             [{x:900, y:510},{x:900, y:637.5},{x:1080, y:637.5}],
-            blank,
-            twoDOutside
-        ),
-        new  Box(
-            scale,
-            true,
             [{x:720, y:765},{x:720, y:510},{x:900, y:510}],
-            blank,
-            twoDOutside
-        ),
-        new  Triangle(
-            scale,
-            false,
             [{x:720, y:765},{x:900, y:765},{x:900, y:510}],
-            blank,
-            twoDOutside
-        ),
-        new  Box(
-            scale,
-            true,
             [{x:1080, y:1020},{x:1080, y:765},{x:720, y:765}],
-            blank,
-            twoDOutside
-        ),
-        new  Triangle(
-            scale,
-            false,
             [{x:1080, y:1020},{x:720, y:1020},{x:720, y:765}],
-            blank,
-            twoDOutside
-        ),
-        new  Box(
-            scale,
-            true,
             [{x:1440, y:1020},{x:1080, y:1020},{x:1080, y:510}],
-            blank,
-            twoDOutside
-        ),
-        new  Triangle(
-            scale,
-            false,
             [{x:1440, y:510},{x:1440, y:1020},{x:1080, y:510}],
-            blank,
-            twoDOutside
-        ),
-        new  Box(
-            scale,
-            true,
             [{x:1440, y:510},{x:720, y:510},{x:720, y:0}],
-            blank,
-            twoDOutside
-        ),
-        new  Triangle(
-            scale,
-            false,
             [{x:720, y:0},{x:1440, y:0},{x:1440, y:510}],
-            blank,
-            twoDOutside
-        ),
-        new  Box(
-            scale,
-            true,
             [{x:0, y:1020},{x:720, y:1020},{x:720, y:0}],
-            blank,
-            twoDOutside
-        ),
-        new  Triangle(
-            scale,
-            false,
             [{x:0, y:0},{x:0, y:1020},{x:720, y:0}],
-            blank,
-            twoDOutside
-        )
     ];
 
     return boxList;
@@ -591,21 +559,18 @@ let make = () => {
     canvas.width = $("#background").width();
     canvas.height = $("#background").height();
 
-    return makeTriangles(canvas.width / MAX_X);
+    return new BoxContainer(canvas.width / MAX_X, specList);
 }
 
-let triangleList = make();
+let boxContainer = make();
 
 $(window).resize(event => {
-    triangleList = make();
+    boxContainer = make();
 });
 
 setInterval (() => {
     let context = canvas.getContext("2d");
     context.clearRect(0, 0, canvas.width, canvas.height);
-
-    triangleList.forEach((triangle) => {
-        triangle.draw(context, inputs.mousePosition);
-    });
+    boxContainer.draw(context, inputs.mousePosition);
 }, INTERVAL);
 

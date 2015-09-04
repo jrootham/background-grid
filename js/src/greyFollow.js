@@ -20,11 +20,11 @@ $('input[type=radio][name=size]').change(
     });
 
 
-const BG_FIRST = 10;
-const BG_LAST = 150;
+const BG_FIRST = 150;
+const BG_LAST = 250;
 const BG_DIFF = BG_LAST - BG_FIRST;
-const CURSOR_FIRST = 100;
-const CURSOR_LAST = 255;
+const CURSOR_FIRST = 10;
+const CURSOR_LAST = 100;
 const CURSOR_DIFF = CURSOR_LAST - CURSOR_FIRST;
 
 function makeBGColour(size, row, column) {
@@ -59,7 +59,7 @@ function setColour(previous, current, size, inputs, newColour) {
 
                 let bgColour = makeBGColour(size, position.row + dy / ratio, position.column + dx / ratio);
                 elementColour = cursorColour - (cursorColour - bgColour) * ratio;
-                elementColour = Math.floor(elementColour);
+                elementColour = Math.round(elementColour);
             }
         }
     }
@@ -74,7 +74,7 @@ var specArray = [
     {
         condition: big,
         spec: {
-            size: constantSize(40, 80),
+            size: constantSize(160, 320),
             borderWidth: constantBorder(1),
             borderColour: RGBA(128, 128, 128),
             setColour: setColour
@@ -83,7 +83,7 @@ var specArray = [
     {
         condition: medium,
         spec: {
-            size: constantSize(20, 40),
+            size: constantSize(40, 80),
             borderWidth: constantBorder(1),
             borderColour: RGBA(128, 128, 128),
             setColour: setColour
