@@ -139,23 +139,71 @@ let threeD = document.getElementById("three_d");
 
 let lower = current => {
     return Math.max(0, current - crossFadeDelta);
-}
+};
 
 let raise = current => {
     return Math.min(1.0, current + crossFadeDelta);
-}
+};
 
 
-class BoxContainer {
-    constructor (scale, specList) {
-        this.state = "start";
-
+class PlainBoxContainer {
+    constructor(scale, specList) {
         this.twoD = twoD;
         this.threeD = threeD;
 
         this.scale = scale;
 
+        this.boxList = [
+            new PlainBox(this, specList[0]),
+            new PlainBox(this, specList[1]),
+            new PlainBox(this, specList[2]),
+            new PlainBox(this, specList[3]),
+            new PlainBox(this, specList[4]),
+            new PlainBox(this, specList[5]),
+            new PlainBox(this, specList[6]),
+            new PlainBox(this, specList[7])
+        ]
+
+    }
+}
+
+class BoxContainer {
+    constructor (scale, specList) {
+        this.scale = scale;
+        this.state = 0;
+        this.stateList = [
+            this.drawEmpty,
+            this.second,
+            this.third,
+            this.fourth
+        ];
+
         this.blackShow = [0, 0, 0, 0, 0, 0, 0, 0];
+        this.greyShow = [0, 0, 0, 0, 0, 0, 0, 0];
+
+        second(context)
+        {
+            drawBlack(context, this.blackShow);
+            drawEmpty(context);
+        }
+
+        third(context)
+        {
+            drawAllBlack(context);
+            drawEmpty(context, this.blackShow);
+        }
+
+        fourth(context)
+        {
+            drawGrey(context, this.greyShow)
+            drawBlackText(context)
+            drawEmpty(context, this.blackShow);
+        }
+
+        drawBlack(context, blackShow)
+        {
+            console.log("foo");
+        }
 
         this.boxList = [
             new BoxUpOutside(this, specList[0]),
@@ -169,22 +217,22 @@ class BoxContainer {
         ]
     }
 
-    changeMinorState(mousePosition) {
-        console.log("foo");
+    changeState(mousePosition) {
+        this.state++;
+    }
+
+    drawEmpty(context) {
+        this.boxList.forEach(box => {
+            box.drawEmpty(context);
+        })
     }
 
     draw(context) {
-
-        switch (this.state) {
-            case "start":
-                this.boxList.forEach(box => {
-                    box.drawEmpty(context);
-                })
-        }
+        this.stateList(context);
     }
 }
 
-class Box {
+class PlainBox {
     constructor(parent, spec) {
         this.topLeftX = parent.scale * spec.topLeft.x;
         this.topLeftY = parent.scale * spec.topLeft.y;
@@ -202,6 +250,16 @@ class Box {
     drawEmpty(context, mousePosition) {
         context.strokeStyle = "black";
         context.strokeRect(this.topLeftX, this.topLeftY, this.deltaX, this.deltaY);
+    }
+}
+
+class Box extends PlainBox {
+    constructor(parent, spec) {
+        super(parent, spec);
+    }
+
+    drawEmpty(context, mousePosition) {
+        super.drawEmpty(context);
         this.diagonal(context);
     }
 
@@ -567,7 +625,7 @@ $(window).resize(event => {
 setInterval (() => {
     let context = canvas.getContext("2d");
     context.clearRect(0, 0, canvas.width, canvas.height);
-    boxContainer.changeMinorState(inputs.mousePosition);
+    boxContainer.changeState(inputs.mousePosition);
     boxContainer.draw(context);
 }, INTERVAL);
 
