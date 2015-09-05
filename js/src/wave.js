@@ -63,6 +63,4 @@ var specArray = [
     }
 ]
 
-let parameters = {vanish:true, interchange:false};
-
-action(specArray, $('#drawing'), $('#foreground'), 30, parameters);
+action(specArray, $('#drawing'), $('#foreground'), 30);

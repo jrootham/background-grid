@@ -122,7 +122,7 @@ if (!Array.prototype.map) {
 const MAX_X = 1440;
 const MAX_Y = 1020;
 const RATIO = MAX_X / MAX_Y;
-const DASH_COLOUR = "blue";
+const DASH_COLOUR = "x0FA9D8";
 const DASH_DASH = 5;
 const DASH_EMPTY = 5;
 
@@ -134,40 +134,28 @@ let canvas = document.getElementById("drawing");
 let crossFadeTime = parseFloat($("input[name=crossFadeTime]:checked").val());
 let crossFadeDelta = (INTERVAL / 1000)  / crossFadeTime;
 
-$('input[type=radio][name=crossFadeTime]').change(
-    function() {
-        crossFadeTime = parseFloat(this.value);
-        crossFadeDelta = (INTERVAL / 1000)  / crossFadeTime;
-    });
-
-let blank = "true" === $("input[name=blank]:checked").val();
-
-$('input[type=radio][name=blank]').change(
-    function() {
-        blank = "true" === this.value;
-        boxContainer = make();
-    });
-
-
-let twoDOutside = "true" === $("input[name=twoDOutside]:checked").val();
-
-$('input[type=radio][name=twoDOutside]').change(
-    function() {
-        twoDOutside = "true" === this.value;
-        boxContainer = make();
-    });
-
 let twoD = document.getElementById("two_d");
 let threeD = document.getElementById("three_d");
 
+let lower = current => {
+    return Math.max(0, current - crossFadeDelta);
+}
+
+let raise = current => {
+    return Math.min(1.0, current + crossFadeDelta);
+}
+
+
 class BoxContainer {
     constructor (scale, specList) {
-        this.twoDOutside = twoDOutside;
-        this.blank = blank;
+        this.state = "start";
+
         this.twoD = twoD;
         this.threeD = threeD;
 
         this.scale = scale;
+
+        this.blackShow = [0, 0, 0, 0, 0, 0, 0, 0];
 
         this.boxList = [
             new BoxUpOutside(this, specList[0]),
@@ -181,11 +169,18 @@ class BoxContainer {
         ]
     }
 
-    draw(context, mousePosition) {
-        this.boxList.forEach(box => {
-                box.draw(context, mousePosition);
-            }
-        )
+    changeMinorState(mousePosition) {
+        console.log("foo");
+    }
+
+    draw(context) {
+
+        switch (this.state) {
+            case "start":
+                this.boxList.forEach(box => {
+                    box.drawEmpty(context);
+                })
+        }
     }
 }
 
@@ -204,7 +199,7 @@ class Box {
             && point.y <= this.topLeftY + this.deltaY;
     }
 
-    draw(context, mousePosition) {
+    drawEmpty(context, mousePosition) {
         context.strokeStyle = "black";
         context.strokeRect(this.topLeftX, this.topLeftY, this.deltaX, this.deltaY);
         this.diagonal(context);
@@ -279,7 +274,8 @@ let specList = [
     {topLeft:{x:900, y:510}, delta:{x:180, y:127.5}},
     {topLeft:{x:990, y:637.5}, delta:{x:90, y:127.5}},
     {topLeft:{x:900, y:701.25}, delta:{x:90, y:63.75}},
-]
+];
+
 class Edge {
     constructor(pointA, pointB) {
 
@@ -571,6 +567,7 @@ $(window).resize(event => {
 setInterval (() => {
     let context = canvas.getContext("2d");
     context.clearRect(0, 0, canvas.width, canvas.height);
-    boxContainer.draw(context, inputs.mousePosition);
+    boxContainer.changeMinorState(inputs.mousePosition);
+    boxContainer.draw(context);
 }, INTERVAL);
 
