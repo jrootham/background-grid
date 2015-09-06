@@ -126,6 +126,10 @@ const DASH_COLOUR = "x0FA9D8";
 const DASH_DASH = 5;
 const DASH_EMPTY = 5;
 
+const TEXT_VERTICAL = 5;
+const TEXT_HORIZONTAL = 5;
+const FONT = "SAN SERIF 3vh"
+
 const EPSILON = 0.000001;
 const INTERVAL = 20;
 
@@ -137,14 +141,9 @@ let crossFadeDelta = (INTERVAL / 1000)  / crossFadeTime;
 let twoD = document.getElementById("two_d");
 let threeD = document.getElementById("three_d");
 
-let lower = current => {
-    return Math.max(0, current - crossFadeDelta);
-};
+let lower = current => Math.max(0, current - crossFadeDelta);
 
-let raise = current => {
-    return Math.min(1.0, current + crossFadeDelta);
-};
-
+let raise = current => Math.min(1.0, current + crossFadeDelta);
 
 class PlainBoxContainer {
     constructor(scale, specList) {
@@ -178,57 +177,77 @@ class BoxContainer {
             this.fourth
         ];
 
-        this.blackShow = [0, 0, 0, 0, 0, 0, 0, 0];
+        this.blackShow = [0, 0, 0, 0, 0, 0, 0, 0, 0];
         this.greyShow = [0, 0, 0, 0, 0, 0, 0, 0];
 
-        second(context)
-        {
-            drawBlack(context, this.blackShow);
-            drawEmpty(context);
-        }
-
-        third(context)
-        {
-            drawAllBlack(context);
-            drawEmpty(context, this.blackShow);
-        }
-
-        fourth(context)
-        {
-            drawGrey(context, this.greyShow)
-            drawBlackText(context)
-            drawEmpty(context, this.blackShow);
-        }
-
-        drawBlack(context, blackShow)
-        {
-            console.log("foo");
-        }
 
         this.boxList = [
-            new BoxUpOutside(this, specList[0]),
-            new BoxDownOutside(this, specList[1]),
-            new BoxUpInside(this, specList[2]),
-            new BoxDownInside(this, specList[3]),
-            new BoxUpOutside(this, specList[4]),
-            new BoxDownOutside(this, specList[5]),
-            new BoxUpInside(this, specList[6]),
-            new BoxDownInside(this, specList[7])
+            new BoxUpOutside(this, specList[0], "A1"),
+            new BoxDownOutside(this, specList[1], "A2"),
+            new BoxUpInside(this, specList[2], "A3"),
+            new BoxDownInside(this, specList[3], "A4"),
+            new BoxUpOutside(this, specList[4], "A5"),
+            new BoxDownOutside(this, specList[5], "A6"),
+            new BoxUpInside(this, specList[6], "A7"),
+            new BoxDownInside(this, specList[7], "A8"),
+            new CentreBox(this, specList[8])
         ]
     }
 
-    changeState(mousePosition) {
-        this.state++;
+    second(context) {
+        this.drawBlack(context, this.blackShow);
+    }
+
+    third(context) {
+        this.drawBlackText(context);
+    }
+
+    fourth(context) {
+        this.drawGrey(context, this.greyShow)
+        this.drawBlackText(context)
+    }
+
+    drawBlack(context, blackShow)
+    {
+        blackShow[0] = raise(blackShow[0]);
+
+        this.boxList.forEach((box, index) => {
+            box.drawBlack(context, blackShow[index]);
+
+            if (blackShow[index] > 0) {
+                blackShow[index] = raise(blackShow[index]);
+            }
+            if (index < blackShow.length - 1) {
+                if (blackShow[index] >= 1.0) {
+                    blackShow[index + 1] = raise(blackShow[index + 1]);
+                }
+            }
+        })
+    }
+
+    changeState(mousePosition, tick) {
+        if (this.state === 0) {
+            if (mousePosition != undefined) {
+                let found = this.boxList.find(box => {
+                    return box.inOutside(mousePosition)
+                })
+
+                if (found) {
+                    $("#debug2").html("found in outside " + found.topLeftX + " " + found.topLeftY);
+                    this.state++;
+                }
+            }
+        }
     }
 
     drawEmpty(context) {
-        this.boxList.forEach(box => {
+        this.boxList.forEach(function(box) {
             box.drawEmpty(context);
         })
     }
 
     draw(context) {
-        this.stateList(context);
+        this.stateList[this.state].call(this, context);
     }
 }
 
@@ -241,26 +260,64 @@ class PlainBox {
     }
 
     inBox(point) {
+        $("#debug1").html("inBox " + point.x + " " + point.y);
         return point.x >= this.topLeftX
             && point.x <= this.topLeftX + this.deltaX
             && point.y >= this.topLeftY
             && point.y <= this.topLeftY + this.deltaY;
     }
 
-    drawEmpty(context, mousePosition) {
+}
+
+class Box extends PlainBox {
+    constructor(parent, spec, pageSize) {
+        super(parent, spec);
+        this.pageSize = pageSize;
+    }
+
+    drawBlack(context, intensity) {
+        this.fillBlack(context, intensity);
+        if (intensity < 1) {
+            this.drawEmpty(context);
+        }
+        else {
+            this.drawFinal(context);
+        }
+    }
+
+    drawFinal(context) {
         context.strokeStyle = "black";
         context.strokeRect(this.topLeftX, this.topLeftY, this.deltaX, this.deltaY);
     }
 }
 
-class Box extends PlainBox {
+class CentreBox extends Box {
     constructor(parent, spec) {
         super(parent, spec);
     }
 
-    drawEmpty(context, mousePosition) {
-        super.drawEmpty(context);
-        this.diagonal(context);
+    fillBlack(context, intensity) {
+        context.save();
+        context.fillStyle = `rgba(0, 0, 0, ${intensity})`;
+        context.fillRect(this.topLeftX, this.topLeftY, this.deltaX, this.deltaY);
+        context.restore();
+    }
+
+    drawEmpty(context) {
+    }
+
+    drawFinal(context) {
+    }
+
+    inOutside(point) {
+        return false;
+    }
+
+}
+
+class BaseBox extends Box {
+    constructor(parent, spec) {
+        super(parent, spec);
     }
 
     diagonalDraw(context, fromX, fromY, toX, toY) {
@@ -273,9 +330,42 @@ class Box extends PlainBox {
         context.stroke();
         context.restore();
     }
+
+    drawEmpty(context) {
+        this.drawFinal(context);
+        this.diagonal(context);
+    }
+
+    inBottom(point) {
+        let result = false;
+        if (this.inBox(point)) {
+            result = ! this.inTop(point);
+        }
+
+        return result;
+    }
+
+    fillBlack(context, intensity) {
+        let triangle = this.outside();
+        context.save();
+        context.fillStyle = `rgba(0, 0, 0, ${intensity})`;
+        context.beginPath();
+        context.moveTo(triangle[0].x, triangle[0].y);
+        context.lineTo(triangle[1].x, triangle[1].y);
+        context.lineTo(triangle[2].x, triangle[2].y);
+        context.closePath();
+        context.fill();
+        context.restore();
+
+        context.save();
+        context.fillStyle = `rgba(255, 255, 255, ${intensity})`;
+        context.font = FONT;
+        context.fillText(this.pageSize, this.textX, this.textY);
+        context.restore();
+    }
 }
 
-class BoxUp extends Box{
+class BoxUp extends BaseBox{
     constructor(parent, spec) {
         super(parent, spec);
     }
@@ -285,9 +375,26 @@ class BoxUp extends Box{
             this.topLeftX, this.topLeftY + this.deltaY,
             this.topLeftX + this.deltaX, this.topLeftY);
     }
+
+    inTop(point) {
+        let result = false;
+        if (this.inBox(point))
+        {
+            let dx = point.x - this.topLeftX;
+            let dy = point.y - this.topLeftY;
+            let target = this.deltaY - dx * (this.deltaY / this.deltaX)
+
+            $("#debug1").html("UP dx " + dx + " dy " + dy + " target " + target);
+
+            result = dy <= target;
+        }
+
+        return result;
+    }
+
 }
 
-class BoxDown extends Box{
+class BoxDown extends BaseBox{
     constructor(parent, spec) {
         super(parent, spec);
     }
@@ -297,29 +404,146 @@ class BoxDown extends Box{
             this.topLeftX, this.topLeftY,
             this.topLeftX + this.deltaX, this.topLeftY + this.deltaY);
     }
+
+    inTop(point) {
+        let result = false;
+        if (this.inBox(point))
+        {
+            let dx = point.x - this.topLeftX;
+            let dy = point.y - this.topLeftY;
+            let dydx = dy / dx;;
+            let ratio = this.deltaY / this.deltaX;
+
+            $("#debug1").html("Down dx " + dx + " dy " + dy + " dydx " + dydx + " ratio " + ratio);
+            result = dydx <= ratio;
+        }
+
+        return result;
+    }
 }
 
 class BoxUpInside extends BoxUp{
     constructor(parent, spec) {
         super(parent, spec);
     }
+
+    inInside(point) {
+        return this.inTop(point);
+    }
+
+    inOutside(point) {
+        return this.inBottom(point);
+    }
+
+    outside() {
+        return [
+            {x: this.topLeftX + this.deltaX, y: this.topLeftY},
+            {x: this.topLeftX, y: this.topLeftY + this.deltaY},
+            {x: this.topLeftX + this.deltaX, y: this.topLeftY + this.deltaY},
+        ]
+    }
+
+    inside() {
+        return [
+            {x: this.topLeftX, y: this.topLeftY},
+            {x: this.topLeftX, y: this.topLeftY + this.deltaY},
+            {x: this.topLeftX + this.deltaX, y: this.topLeftY},
+        ]
+    }
+
+
 }
 
 class BoxDownInside extends BoxDown{
     constructor(parent, spec) {
         super(parent, spec);
     }
+
+    inInside(point) {
+        return this.inTop(point);
+    }
+
+    inOutside(point) {
+        return this.inBottom(point);
+    }
+
+    inside() {
+        return [
+            {x: this.topLeftX, y: this.topLeftY},
+            {x: this.topLeftX + this.deltaX, y: this.topLeftY + this.deltaY},
+            {x: this.topLeftX + this.deltaX, y: this.topLeftY},
+        ]
+    }
+
+    outside() {
+        return [
+            {x: this.topLeftX, y: this.topLeftY},
+            {x: this.topLeftX, y: this.topLeftY + this.deltaY},
+            {x: this.topLeftX + this.deltaX, y: this.topLeftY + this.deltaY},
+        ]
+    }
+
 }
 
 class BoxUpOutside extends BoxUp{
     constructor(parent, spec) {
         super(parent, spec);
     }
+
+    inInside(point) {
+        return this.inBottom(point);
+    }
+
+    inOutside(point) {
+        return this.inTop(point);
+    }
+
+    inside() {
+        return [
+            {x: this.topLeftX + this.deltaX, y: this.topLeftY},
+            {x: this.topLeftX, y: this.topLeftY + this.deltaY},
+            {x: this.topLeftX + this.deltaX, y: this.topLeftY + this.deltaY},
+        ]
+    }
+
+    outside() {
+        return [
+            {x: this.topLeftX, y: this.topLeftY},
+            {x: this.topLeftX, y: this.topLeftY + this.deltaY},
+            {x: this.topLeftX + this.deltaX, y: this.topLeftY},
+        ]
+    }
+
+
+
 }
 
 class BoxDownOutside extends BoxDown{
     constructor(parent, spec) {
         super(parent, spec);
+    }
+    inInside(point) {
+        return this.inBottom(point);
+    }
+
+    inOutside(point) {
+        return this.inTop(point);
+    }
+
+    inside() {
+        return [
+            {x: this.topLeftX, y: this.topLeftY},
+            {x: this.topLeftX + this.deltaX, y: this.topLeftY + this.deltaY},
+            {x: this.topLeftX + this.deltaX, y: this.topLeftY},
+        ]
+    }
+
+    outside() {
+        return [
+            {x: this.topLeftX, y: this.topLeftY},
+            {x: this.topLeftX + this.deltaX, y: this.topLeftY + this.deltaY},
+            {x: this.topLeftX + this.deltaX, y: this.topLeftY},
+        ]
     }
 }
 
@@ -332,6 +556,7 @@ let specList = [
     {topLeft:{x:900, y:510}, delta:{x:180, y:127.5}},
     {topLeft:{x:990, y:637.5}, delta:{x:90, y:127.5}},
     {topLeft:{x:900, y:701.25}, delta:{x:90, y:63.75}},
+    {topLeft:{x:900, y:637.5}, delta:{x:90, y:63.75}},
 ];
 
 class Edge {
@@ -622,10 +847,12 @@ $(window).resize(event => {
     boxContainer = make();
 });
 
+let tick = 0;
+
 setInterval (() => {
     let context = canvas.getContext("2d");
     context.clearRect(0, 0, canvas.width, canvas.height);
-    boxContainer.changeState(inputs.mousePosition);
+    boxContainer.changeState(inputs.mousePosition, tick++);
     boxContainer.draw(context);
 }, INTERVAL);
 
