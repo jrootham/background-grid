@@ -119,6 +119,9 @@ if (!Array.prototype.map) {
     };
 }
 
+const EPSILON = 0.000001;
+const INTERVAL = 20;
+
 const MAX_X = 1440;
 const MAX_Y = 1020;
 const RATIO = MAX_X / MAX_Y;
@@ -126,17 +129,24 @@ const DASH_COLOUR = "x0FA9D8";
 const DASH_DASH = 5;
 const DASH_EMPTY = 5;
 
-const TEXT_VERTICAL = 5;
-const TEXT_HORIZONTAL = 5;
-const FONT = "SAN SERIF 3vh"
+const PAGE_VERTICAL = 5;
+const PAGE_HORIZONTAL = 5;
+const PAGE_FONT = "Sans Serif 6vw";
 
-const EPSILON = 0.000001;
-const INTERVAL = 20;
+const TEXT_DELAY_TIME = 1.0;
+const TEXT_DELAY_TICKS = TEXT_DELAY_TIME / INTERVAL;
+
+const TEXT_FONT = "Sans Serif 5vw";
+const TEXT_HEIGHT = 25;
+const BLACK_TEXT_X = 5;
+const BLACK_TEXT_Y = 50;
+
 
 let canvas = document.getElementById("drawing");
 
 let crossFadeTime = parseFloat($("input[name=crossFadeTime]:checked").val());
 let crossFadeDelta = (INTERVAL / 1000)  / crossFadeTime;
+$("#debug1").html(`Time ${crossFadeTime} delta ${crossFadeDelta}`);
 
 let twoD = document.getElementById("two_d");
 let threeD = document.getElementById("three_d");
@@ -161,8 +171,7 @@ class PlainBoxContainer {
             new PlainBox(this, specList[5]),
             new PlainBox(this, specList[6]),
             new PlainBox(this, specList[7])
-        ]
-
+        ];
     }
 }
 
@@ -174,15 +183,23 @@ class BoxContainer {
             this.drawEmpty,
             this.second,
             this.third,
-            this.fourth
+            this.fourth,
+            this.fifth,
+            this.sixth
         ];
+
+        this.pageVertical = PAGE_VERTICAL * scale;
+        this.pageHorizontal = PAGE_HORIZONTAL * scale;
+        this.blackTextX = BLACK_TEXT_X * scale;
+        this.blackTextY = BLACK_TEXT_Y * scale;
+        this.textHeight = TEXT_HEIGHT * scale;
 
         this.blackShow = [0, 0, 0, 0, 0, 0, 0, 0, 0];
         this.greyShow = [0, 0, 0, 0, 0, 0, 0, 0];
-
+        this.blackTextShow = 0;
 
         this.boxList = [
-            new BoxUpOutside(this, specList[0], "A1"),
+            new BoxWithText(this, specList[0], "A1"),
             new BoxDownOutside(this, specList[1], "A2"),
             new BoxUpInside(this, specList[2], "A3"),
             new BoxDownInside(this, specList[3], "A4"),
@@ -199,17 +216,30 @@ class BoxContainer {
     }
 
     third(context) {
-        this.drawBlackText(context);
+        this.drawAllBlack(context);
     }
 
     fourth(context) {
+        this.drawAllBlack(context);
+        this.drawBlackText(context);
+    }
+
+    fifth(context) {
         this.drawGrey(context, this.greyShow)
+        this.drawAllBlack(context);
+        this.drawBlackText(context)
+    }
+
+    sixth(context) {
+        this.drawGreyText(context, this.greyShow)
         this.drawBlackText(context)
     }
 
     drawBlack(context, blackShow)
     {
-        blackShow[0] = raise(blackShow[0]);
+        if (blackShow[0] <= 0) {
+            blackShow[0] = raise(blackShow[0]);
+        }
 
         this.boxList.forEach((box, index) => {
             box.drawBlack(context, blackShow[index]);
@@ -225,18 +255,65 @@ class BoxContainer {
         })
     }
 
-    changeState(mousePosition, tick) {
-        if (this.state === 0) {
-            if (mousePosition != undefined) {
-                let found = this.boxList.find(box => {
-                    return box.inOutside(mousePosition)
-                })
+    drawAllBlack(context, blackShow) {
+        this.boxList.forEach(box => {
+            box.drawBlack(context, 1);
+        });
+    }
 
-                if (found) {
-                    $("#debug2").html("found in outside " + found.topLeftX + " " + found.topLeftY);
+    drawBlackText(context, blackShow)
+    {
+        this.blackTextShow = raise(this.blackTextShow);
+        this.boxList[0].drawBlackText(context, this.blackTextShow);
+    }
+
+    drawGrey(context, greyShow) {
+
+    }
+
+
+
+    changeState(mousePosition, tick) {
+        switch (this.state) {
+            case 0: {                   // Showing empty
+                if (mousePosition != undefined) {
+                    let found = this.boxList.find(box => {
+                        return box.inOutside(mousePosition)
+                    });
+
+                    if (found) {
+                        $("#debug2").html("found in outside " + found.topLeftX + " " + found.topLeftY);
+                        this.state++;
+                    }
+                }
+            }
+            case 1: {                   // Draswing black spiral
+                if (this.blackShow.every(show => show >= 1)) {
+                    this.startTick = tick;
                     this.state++;
                 }
             }
+            case 2: {                   // Waiting
+                if (tick - this.startTick > TEXT_DELAY_TICKS) {
+                    this.state++;
+                }
+            }
+            case 3: {                   // Drawing black text
+                if (mousePosition != undefined) {
+                    let found = this.boxList.find(box => {
+                        return box.inInside(mousePosition)
+                    });
+
+                    if (found) {
+                        $("#debug2").html("found in inside " + found.topLeftX + " " + found.topLeftY);
+                        this.state++;
+                    }
+                }
+            }
+            case 4: {                   // Drawing grey spiral
+
+            }
+
         }
     }
 
@@ -253,6 +330,8 @@ class BoxContainer {
 
 class PlainBox {
     constructor(parent, spec) {
+        this.parent = parent;
+
         this.topLeftX = parent.scale * spec.topLeft.x;
         this.topLeftY = parent.scale * spec.topLeft.y;
         this.deltaX = parent.scale * spec.delta.x;
@@ -270,9 +349,8 @@ class PlainBox {
 }
 
 class Box extends PlainBox {
-    constructor(parent, spec, pageSize) {
+    constructor(parent, spec) {
         super(parent, spec);
-        this.pageSize = pageSize;
     }
 
     drawBlack(context, intensity) {
@@ -313,11 +391,15 @@ class CentreBox extends Box {
         return false;
     }
 
+    inInside(point) {
+        return false;
+    }
 }
 
 class BaseBox extends Box {
-    constructor(parent, spec) {
+    constructor(parent, spec, pageSize) {
         super(parent, spec);
+        this.pageSize = pageSize;
     }
 
     diagonalDraw(context, fromX, fromY, toX, toY) {
@@ -345,6 +427,15 @@ class BaseBox extends Box {
         return result;
     }
 
+    inInside(point) {
+        let result = false;
+        if (this.inBox(point)) {
+            result = ! this.inOutside(point);
+        }
+
+        return result;
+    }
+
     fillBlack(context, intensity) {
         let triangle = this.outside();
         context.save();
@@ -359,15 +450,17 @@ class BaseBox extends Box {
 
         context.save();
         context.fillStyle = `rgba(255, 255, 255, ${intensity})`;
-        context.font = FONT;
-        context.fillText(this.pageSize, this.textX, this.textY);
+        context.font = PAGE_FONT;
+        context.textAlign = this.pageAlign;
+        context.textBaseline = this.pageBaseline;
+        context.fillText(this.pageSize, this.pageX, this.pageY);
         context.restore();
     }
 }
 
 class BoxUp extends BaseBox{
-    constructor(parent, spec) {
-        super(parent, spec);
+    constructor(parent, spec, pageSize) {
+        super(parent, spec, pageSize);
     }
 
     diagonal(context) {
@@ -395,8 +488,8 @@ class BoxUp extends BaseBox{
 }
 
 class BoxDown extends BaseBox{
-    constructor(parent, spec) {
-        super(parent, spec);
+    constructor(parent, spec, pageSize) {
+        super(parent, spec, pageSize);
     }
 
     diagonal(context) {
@@ -423,8 +516,12 @@ class BoxDown extends BaseBox{
 }
 
 class BoxUpInside extends BoxUp{
-    constructor(parent, spec) {
-        super(parent, spec);
+    constructor(parent, spec, pageSize) {
+        super(parent, spec, pageSize);
+        this.pageX = this.topLeftX + this.deltaX - parent.pageHorizontal;
+        this.pageY = this.topLeftY + this.deltaY - parent.pageVertical;
+        this.pageAlign = "end";
+        this.pageBaseline = "bottom"
     }
 
     inInside(point) {
@@ -455,8 +552,12 @@ class BoxUpInside extends BoxUp{
 }
 
 class BoxDownInside extends BoxDown{
-    constructor(parent, spec) {
-        super(parent, spec);
+    constructor(parent, spec, pageSize) {
+        super(parent, spec, pageSize);
+        this.pageX = this.topLeftX + parent.pageHorizontal;
+        this.pageY = this.topLeftY + this.deltaY - parent.pageVertical;
+        this.pageAlign = "start";
+        this.pageBaseline = "bottom";
     }
 
     inInside(point) {
@@ -486,8 +587,12 @@ class BoxDownInside extends BoxDown{
 }
 
 class BoxUpOutside extends BoxUp{
-    constructor(parent, spec) {
-        super(parent, spec);
+    constructor(parent, spec, pageSize) {
+        super(parent, spec, pageSize);
+        this.pageX = this.topLeftX + parent.pageHorizontal;
+        this.pageY = this.topLeftY + parent.pageVertical;
+        this.pageAlign = "start";
+        this.pageBaseline = "top"
     }
 
     inInside(point) {
@@ -513,14 +618,15 @@ class BoxUpOutside extends BoxUp{
             {x: this.topLeftX + this.deltaX, y: this.topLeftY},
         ]
     }
-
-
-
 }
 
 class BoxDownOutside extends BoxDown{
-    constructor(parent, spec) {
-        super(parent, spec);
+    constructor(parent, spec, pageSize) {
+        super(parent, spec, pageSize);
+        this.pageX = this.topLeftX + this.deltaX - parent.pageHorizontal;
+        this.pageY = this.topLeftY + parent.pageVertical;
+        this.pageAlign = "end";
+        this.pageBaseline = "top"
     }
     inInside(point) {
         return this.inBottom(point);
@@ -545,6 +651,45 @@ class BoxDownOutside extends BoxDown{
             {x: this.topLeftX + this.deltaX, y: this.topLeftY},
         ]
     }
+}
+
+class BoxWithText extends BoxUpOutside {
+    constructor(parent, spec, pageSize) {
+        super(parent, spec, pageSize);
+    }
+
+    drawBlackText(context, blackShow) {
+        let text = [
+            "Semantics",
+            "Syntactics",
+            "Pragmatics",
+            "Discipline",
+            "Appropriateness",
+            "Ambiguity",
+            "Design is One",
+            "Visual Power",
+            "Intellectual Elegance",
+            "Timelessness",
+            "Responsibility",
+            "Equity",
+        ];
+
+        this.drawText(context, this.parent.blackTextX, this.parent.blackTextY, 255, text, blackShow);
+    }
+
+    drawText(context, x, y, colour, text, intensity) {
+        context.save();
+        context.fillStyle = `rgba(${colour}, ${colour}, ${colour}, ${intensity})`;
+        context.font = TEXT_FONT;
+
+        text.forEach(line => {
+            context.fillText(line, x, y);
+            y += this.parent.textHeight;
+        });
+
+        context.restore();
+    }
+
 }
 
 let specList = [
