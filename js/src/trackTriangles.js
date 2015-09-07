@@ -129,18 +129,22 @@ const DASH_COLOUR = "x0FA9D8";
 const DASH_DASH = 5;
 const DASH_EMPTY = 5;
 
-const PAGE_VERTICAL = 5;
-const PAGE_HORIZONTAL = 5;
-const PAGE_FONT = "Sans Serif 6vw";
+const PAGE_VERTICAL = 7;
+const PAGE_HORIZONTAL = 7;
+const PAGE_FONT = "bolder 2vw Helvetica";
 
 const TEXT_DELAY_TIME = 1.0;
 const TEXT_DELAY_TICKS = TEXT_DELAY_TIME / INTERVAL;
 
-const TEXT_FONT = "Sans Serif 5vw";
-const TEXT_HEIGHT = 25;
-const BLACK_TEXT_X = 5;
+const TEXT_FONT = "bolder 2vw Helvetica";
+const TEXT_HEIGHT = 32;
+const BLACK_TEXT_X = 320;
 const BLACK_TEXT_Y = 50;
 
+const GREY_COLOUR = 180;
+const GREY_TEXT_COLOUR = 255;
+const GREY_TEXT_X = 320;
+const GREY_TEXT_Y = 620;
 
 let canvas = document.getElementById("drawing");
 
@@ -193,6 +197,8 @@ class BoxContainer {
         this.blackTextX = BLACK_TEXT_X * scale;
         this.blackTextY = BLACK_TEXT_Y * scale;
         this.textHeight = TEXT_HEIGHT * scale;
+        this.greyTextX = GREY_TEXT_X * scale;
+        this.greyTextY = GREY_TEXT_Y * scale;
 
         this.blackShow = [0, 0, 0, 0, 0, 0, 0, 0, 0];
         this.greyShow = [0, 0, 0, 0, 0, 0, 0, 0];
@@ -206,7 +212,7 @@ class BoxContainer {
             new BoxUpOutside(this, specList[4], "A5"),
             new BoxDownOutside(this, specList[5], "A6"),
             new BoxUpInside(this, specList[6], "A7"),
-            new BoxDownInside(this, specList[7], "A8"),
+            new BoxDownInside(this, specList[7], ""),
             new CentreBox(this, specList[8])
         ]
     }
@@ -225,13 +231,15 @@ class BoxContainer {
     }
 
     fifth(context) {
-        this.drawGrey(context, this.greyShow)
+        this.drawGrey(context, this.greyShow);
+        this.drawGreyText(context, this.greyShow[7])
         this.drawAllBlack(context);
-        this.drawBlackText(context)
+        this.drawBlackText(context);
     }
 
     sixth(context) {
         this.drawGreyText(context, this.greyShow)
+        this.drawGrey(context, this.greyShow);
         this.drawBlackText(context)
     }
 
@@ -255,10 +263,43 @@ class BoxContainer {
         })
     }
 
-    drawAllBlack(context, blackShow) {
+    drawAllBlack(context) {
         this.boxList.forEach(box => {
             box.drawBlack(context, 1);
         });
+    }
+
+    drawGrey(context, greyShow)
+    {
+        if (greyShow[0] <= 0) {
+            greyShow[0] = raise(greyShow[0]);
+        }
+
+        let list = this.boxList.slice(0, this.boxList.length - 1).reverse();
+
+        list.forEach((box, index) => {
+            box.drawGrey(context, greyShow[index]);
+
+            if (greyShow[index] > 0) {
+                greyShow[index] = raise(greyShow[index]);
+            }
+            if (index < greyShow.length - 1) {
+                if (greyShow[index] >= 1.0) {
+                    greyShow[index + 1] = raise(greyShow[index + 1]);
+                }
+            }
+        })
+    }
+
+    drawAllGrey(context) {
+        this.boxList.forEach(box => {
+            box.drawGrey(context, 1);
+        });
+    }
+
+    drawGreyText(context, textShow)
+    {
+        this.boxList[0].drawGreyText(context, textShow);
     }
 
     drawBlackText(context, blackShow)
@@ -266,12 +307,6 @@ class BoxContainer {
         this.blackTextShow = raise(this.blackTextShow);
         this.boxList[0].drawBlackText(context, this.blackTextShow);
     }
-
-    drawGrey(context, greyShow) {
-
-    }
-
-
 
     changeState(mousePosition, tick) {
         switch (this.state) {
@@ -363,6 +398,11 @@ class Box extends PlainBox {
         }
     }
 
+    drawGrey(context, intensity) {
+        this.fill(context, this.inside(), GREY_COLOUR, intensity);
+        this.drawFinal(context);
+    }
+
     drawFinal(context) {
         context.strokeStyle = "black";
         context.strokeRect(this.topLeftX, this.topLeftY, this.deltaX, this.deltaY);
@@ -375,8 +415,12 @@ class CentreBox extends Box {
     }
 
     fillBlack(context, intensity) {
+        this.fill (context, 0, intensity);
+    }
+
+    fill(context, colour, intensity) {
         context.save();
-        context.fillStyle = `rgba(0, 0, 0, ${intensity})`;
+        context.fillStyle = `rgba(${colour}, ${colour}, ${colour}, ${intensity})`;
         context.fillRect(this.topLeftX, this.topLeftY, this.deltaX, this.deltaY);
         context.restore();
     }
@@ -437,16 +481,7 @@ class BaseBox extends Box {
     }
 
     fillBlack(context, intensity) {
-        let triangle = this.outside();
-        context.save();
-        context.fillStyle = `rgba(0, 0, 0, ${intensity})`;
-        context.beginPath();
-        context.moveTo(triangle[0].x, triangle[0].y);
-        context.lineTo(triangle[1].x, triangle[1].y);
-        context.lineTo(triangle[2].x, triangle[2].y);
-        context.closePath();
-        context.fill();
-        context.restore();
+        this.fill (context, this.outside(), 0, intensity);
 
         context.save();
         context.fillStyle = `rgba(255, 255, 255, ${intensity})`;
@@ -454,6 +489,18 @@ class BaseBox extends Box {
         context.textAlign = this.pageAlign;
         context.textBaseline = this.pageBaseline;
         context.fillText(this.pageSize, this.pageX, this.pageY);
+        context.restore();
+    }
+
+    fill(context, triangle, colour, intensity) {
+        context.save();
+        context.fillStyle = `rgba(${colour}, ${colour}, ${colour}, ${intensity})`;
+        context.beginPath();
+        context.moveTo(triangle[0].x, triangle[0].y);
+        context.lineTo(triangle[1].x, triangle[1].y);
+        context.lineTo(triangle[2].x, triangle[2].y);
+        context.closePath();
+        context.fill();
         context.restore();
     }
 }
@@ -628,6 +675,7 @@ class BoxDownOutside extends BoxDown{
         this.pageAlign = "end";
         this.pageBaseline = "top"
     }
+
     inInside(point) {
         return this.inBottom(point);
     }
@@ -639,8 +687,8 @@ class BoxDownOutside extends BoxDown{
     inside() {
         return [
             {x: this.topLeftX, y: this.topLeftY},
+            {x: this.topLeftX, y: this.topLeftY + this.deltaY},
             {x: this.topLeftX + this.deltaX, y: this.topLeftY + this.deltaY},
-            {x: this.topLeftX + this.deltaX, y: this.topLeftY},
         ]
     }
 
@@ -666,6 +714,13 @@ class BoxWithText extends BoxUpOutside {
             "Discipline",
             "Appropriateness",
             "Ambiguity",
+        ];
+
+        this.drawText(context, this.parent.blackTextX, this.parent.blackTextY, 255, text, blackShow);
+    }
+
+    drawGreyText(context, greyShow) {
+        let text = [
             "Design is One",
             "Visual Power",
             "Intellectual Elegance",
@@ -674,8 +729,9 @@ class BoxWithText extends BoxUpOutside {
             "Equity",
         ];
 
-        this.drawText(context, this.parent.blackTextX, this.parent.blackTextY, 255, text, blackShow);
+        this.drawText(context, this.parent.greyTextX, this.parent.greyTextY, GREY_TEXT_COLOUR, text, greyShow);
     }
+
 
     drawText(context, x, y, colour, text, intensity) {
         context.save();
