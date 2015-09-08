@@ -138,16 +138,10 @@ const TEXT_DELAY_TICKS = TEXT_DELAY_TIME / INTERVAL;
 
 const TEXT_FONT = "bolder 2vw Helvetica";
 const TEXT_HEIGHT = 32;
-const BLACK_TEXT_X = 320;
+const BLACK_TEXT_X = 32;
 const BLACK_TEXT_Y = 50;
 
-const GREY_COLOUR = 180;
-const GREY_TEXT_COLOUR = 255;
-const GREY_TEXT_X = 320;
-const GREY_TEXT_Y = 620;
-
 let intervalId = undefined;
-let current = undefined;
 
 let crossFadeTime = parseFloat($("input[name=crossFadeTime]:checked").val());
 let crossFadeDelta = (INTERVAL / 1000)  / crossFadeTime;
@@ -180,7 +174,6 @@ let doSpirals = () => {
     $("#boxes").show();
     boxContainer = makeSpirals();
     start(drawSpirals);
-    current = doSpirals;
 }
 
 let doBoxes = () => {
@@ -188,7 +181,6 @@ let doBoxes = () => {
     $("#boxes").hide();
     boxContainer = makeBoxes();
     start(drawBoxes);
-    current = doBoxes;
 }
 
 $("#spirals").click(event => {
@@ -243,7 +235,8 @@ class PlainBoxContainer {
             new BoxBox(this, specList[4]),
             new BoxBox(this, specList[5]),
             new BoxBox(this, specList[6]),
-            new BoxBox(this, specList[7])
+            new BoxBox(this, specList[7]),
+            new NullBox(this, specList[8])
         ];
     }
 
@@ -291,11 +284,20 @@ class PlainBox {
     }
 }
 
-class BoxBox extends PlainBox {
+class NullBox extends PlainBox {
     constructor(parent, spec) {
         super(parent, spec);
 
         this.here = false;
+    }
+
+    draw(context) {}
+}
+
+class BoxBox extends NullBox {
+    constructor(parent, spec) {
+        super(parent, spec);
+
         this.show2D = 1.0;
     }
 
@@ -345,9 +347,6 @@ class BoxContainer {
             this.drawEmpty,
             this.second,
             this.third,
-            this.fourth,
-            this.fifth,
-            this.sixth
         ];
 
         this.pageVertical = PAGE_VERTICAL * scale;
@@ -355,8 +354,6 @@ class BoxContainer {
         this.blackTextX = BLACK_TEXT_X * scale;
         this.blackTextY = BLACK_TEXT_Y * scale;
         this.textHeight = TEXT_HEIGHT * scale;
-        this.greyTextX = GREY_TEXT_X * scale;
-        this.greyTextY = GREY_TEXT_Y * scale;
 
         this.blackShow = [0, 0, 0, 0, 0, 0, 0, 0, 0];
         this.greyShow = [0, 0, 0, 0, 0, 0, 0, 0];
@@ -381,24 +378,31 @@ class BoxContainer {
 
     third(context) {
         this.drawAllBlack(context);
-    }
-
-    fourth(context) {
-        this.drawAllBlack(context);
         this.drawBlackText(context);
     }
 
-    fifth(context) {
-        this.drawGrey(context, this.greyShow);
-        this.drawGreyText(context, this.greyShow[7])
-        this.drawAllBlack(context);
-        this.drawBlackText(context);
-    }
+    changeState(mousePosition, tick) {
+        switch (this.state) {
+            case 0:                    // Showing empty
+                if (mousePosition != undefined) {
+                    let found = this.boxList.find(box => {
+                        return box.inOutside(mousePosition)
+                    });
 
-    sixth(context) {
-        this.drawGreyText(context, this.greyShow)
-        this.drawGrey(context, this.greyShow);
-        this.drawBlackText(context)
+                    if (found) {
+                        this.state++;
+                    }
+                }
+                break;
+
+            case 1:                    // Draswing black spiral
+                if (this.blackShow.every(show => show >= 1)) {
+                    this.state++;
+                }
+                break;
+
+            case 2:                    // Drawing black text
+        }
     }
 
     drawBlack(context, blackShow)
@@ -427,88 +431,10 @@ class BoxContainer {
         });
     }
 
-    drawGrey(context, greyShow)
-    {
-        if (greyShow[0] <= 0) {
-            greyShow[0] = raise(greyShow[0]);
-        }
-
-        let list = this.boxList.slice(0, this.boxList.length - 1).reverse();
-
-        list.forEach((box, index) => {
-            box.drawGrey(context, greyShow[index]);
-
-            if (greyShow[index] > 0) {
-                greyShow[index] = raise(greyShow[index]);
-            }
-            if (index < greyShow.length - 1) {
-                if (greyShow[index] >= 1.0) {
-                    greyShow[index + 1] = raise(greyShow[index + 1]);
-                }
-            }
-        })
-    }
-
-    drawAllGrey(context) {
-        this.boxList.forEach(box => {
-            box.drawGrey(context, 1);
-        });
-    }
-
-    drawGreyText(context, textShow)
-    {
-        this.boxList[0].drawGreyText(context, textShow);
-    }
-
     drawBlackText(context, blackShow)
     {
         this.blackTextShow = raise(this.blackTextShow);
         this.boxList[0].drawBlackText(context, this.blackTextShow);
-    }
-
-    changeState(mousePosition, tick) {
-        switch (this.state) {
-            case 0:                    // Showing empty
-                if (mousePosition != undefined) {
-                    let found = this.boxList.find(box => {
-                        return box.inOutside(mousePosition)
-                    });
-
-                    if (found) {
-                        this.state++;
-                    }
-                }
-                break;
-
-            case 1:                    // Draswing black spiral
-                if (this.blackShow.every(show => show >= 1)) {
-                    this.startTick = tick;
-                    this.state++;
-                }
-                break;
-
-            case 2:                    // Waiting
-                if (tick - this.startTick > TEXT_DELAY_TICKS) {
-                    this.state++;
-                }
-                break;
-
-            case 3:                    // Drawing black text
-                if (mousePosition != undefined) {
-                    let found = this.boxList.find(box => {
-                        return box.inInside(mousePosition)
-                    });
-
-                    if (found) {
-                        this.state++;
-                    }
-                }
-                break;
-
-            case 4:                    // Drawing grey spiral
-                break;
-
-        }
     }
 
     drawEmpty(context) {
@@ -535,11 +461,6 @@ class Box extends PlainBox {
         else {
             this.drawFinal(context);
         }
-    }
-
-    drawGrey(context, intensity) {
-        this.fill(context, this.inside(), GREY_COLOUR, intensity);
-        this.drawFinal(context);
     }
 
     drawFinal(context) {
@@ -850,13 +771,6 @@ class BoxWithText extends BoxUpOutside {
             "Discipline",
             "Appropriateness",
             "Ambiguity",
-        ];
-
-        this.drawText(context, this.parent.blackTextX, this.parent.blackTextY, 255, text, blackShow);
-    }
-
-    drawGreyText(context, greyShow) {
-        let text = [
             "Design is One",
             "Visual Power",
             "Intellectual Elegance",
@@ -865,9 +779,8 @@ class BoxWithText extends BoxUpOutside {
             "Equity",
         ];
 
-        this.drawText(context, this.parent.greyTextX, this.parent.greyTextY, GREY_TEXT_COLOUR, text, greyShow);
+        this.drawText(context, this.parent.blackTextX, this.parent.blackTextY, 255, text, blackShow);
     }
-
 
     drawText(context, x, y, colour, text, intensity) {
         context.save();
@@ -923,7 +836,7 @@ let fore = $("#foreground");
 let inputs = new Inputs(fore);
 
 $(window).resize(event => {
-    current();
+    doSpirals();
 });
 
 doSpirals();
