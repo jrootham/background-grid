@@ -151,11 +151,17 @@ $("#spirals").hide();
 $("#spirals").click(event => {
     $("#spirals").hide();
     $("#boxes").show();
+    boxContainer = makeBoxes();
+    action = drawBoxes;
+    reset();
 });
 
 $("#boxes").click(event => {
     $("#spirals").show();
     $("#boxes").hide();
+    boxContainer = makeSpirals();
+    action = drawSpirals;
+    reset();
 });
 
 
@@ -171,6 +177,30 @@ let threeD = document.getElementById("three_d");
 let lower = current => Math.max(0, current - crossFadeDelta);
 
 let raise = current => Math.min(1.0, current + crossFadeDelta);
+
+let makeSpirals = () => {
+    canvas.width = $("#background").width();
+    canvas.height = $("#background").height();
+
+    return new BoxContainer(canvas.width / MAX_X, specList);
+}
+
+let makeBoxes = () => {
+    canvas.width = $("#background").width();
+    canvas.height = $("#background").height();
+
+    return new PlainBoxContainer(canvas.width / MAX_X, specList);
+}
+
+let drawSpirals = context => {
+    boxContainer.changeState(inputs.mousePosition, tick++);
+    boxContainer.draw(context);
+}
+
+let drawBoxes = context => {
+    boxContainer.changeState(inputs.mousePosition);
+    boxContainer.draw(context);
+}
 
 class PlainBoxContainer {
     constructor(scale, specList) {
@@ -776,255 +806,6 @@ let specList = [
     {topLeft:{x:900, y:637.5}, delta:{x:90, y:63.75}},
 ];
 
-class Edge {
-    constructor(pointA, pointB) {
-
-        // Make sure we draw diagonal lines in the same order
-
-        if (pointA.x < pointB.x) {
-            this.point0 = pointA;
-            this.point1 = pointB;
-        }
-        else {
-            this.point0 = pointB;
-            this.point1 = pointA;
-        }
-    }
-
-    draw(context) {
-        let dx = this.point0.x - this.point1.x;
-        let dy = this.point0.y - this.point1.y;
-
-        context.save();
-        if (dx === 0 || dy === 0) {
-            context.strokeStyle = "black";
-        }
-        else {
-            context.strokeStyle = "blue";
-            context.setLineDash([5, 5]);
-        }
-
-        context.beginPath();
-        context.moveTo(this.point0.x, this.point0.y);
-        context.lineTo(this.point1.x, this.point1.y);
-        context.stroke();
-
-        context.restore();
-    }
-}
-
-class Triangle {
-    constructor(scale, outside, triangle, startBlank, twoDOutside) {
-        this.newPoint = true;
-        this.fromShow = 0.0;
-        this.toShow = 1.0;
-
-        if (startBlank) {
-            this.fromShow = 0.0;
-            this.toShow = 0.0;
-            this.fromImage = twoD;
-            this.toImage = threeD;
-        }
-        else {
-            if (twoDOutside === outside) {
-                this.fromImage = twoD;
-                this.toImage = threeD;
-            }
-            else {
-                this.fromImage = threeD;
-                this.toImage = twoD;
-            }
-        }
-
-        this.outside = outside;
-
-        this.triangle  = triangle.map(function(point) {
-            return {x: scale * point.x, y: scale * point.y};
-        });
-
-        this.box = this.boundingBox();
-
-        this.hasTopLeft = this.triangle.find(point => {
-            return Math.abs(point.x - this.box.left) < EPSILON
-                && Math.abs(point.y - this.box.top) < EPSILON;
-        });
-
-        this.hasBottomLeft = this.triangle.find(point => {
-            return Math.abs(point.x - this.box.left) < EPSILON
-                && Math.abs(point.y - this.box.bottom) < EPSILON;
-        });
-
-        this.hasTopRight = this.triangle.find(point => {
-            return Math.abs(point.x - this.box.right) < EPSILON
-                && Math.abs(point.y - this.box.top) < EPSILON;
-        });
-
-        this.edgeList = [
-            new Edge(this.triangle[0], this.triangle[1]),
-            new Edge(this.triangle[0], this.triangle[2]),
-            new Edge(this.triangle[1], this.triangle[2])
-        ];
-    }
-
-    bound (point, box) {
-        box.left = box.left > point.x ? point.x : box.left;
-        box.right = box.right < point.x ? point.x : box.right;
-        box.top = box.top > point.y ? point.y : box.top;
-        box.bottom = box.bottom < point.y ? point.y : box.bottom;
-
-        return box;
-    }
-
-    boundingBox(){
-        let box = {
-            left:  this.triangle[0].x,
-            right: this.triangle[0].x,
-            top: this.triangle[0].y,
-            bottom: this.triangle[0].y
-        }
-
-        this.bound(this.triangle[1], box);
-        this.bound(this.triangle[2], box);
-
-        return box;
-    }
-
-    testPoint(point) {
-        if (point && this.inBox(point)) {
-            if (this.hasTopLeft) {
-                if (this.hasBottomLeft) {
-                    if (this.hasTopRight) {
-                        return this.inTopLeft(point);
-                    }
-                    else {
-                        return this.inBottomLeft(point);
-                    }
-                }
-                else {
-                    return this.inTopRight(point);
-                }
-            }
-            else {
-                return this.inBottomRight(point);
-            }
-        }
-        else {
-            return false;
-        }
-    }
-
-    inTopLeft(point) {
-        let xRatio = (this.box.right - point.x) / (this.box.right - this.box.left);
-        let yRatio = (point.y - this.box.top) / (this.box.bottom - this.box.top);
-
-        let result = xRatio >= yRatio;
-        return result;
-    }
-
-    inTopRight(point) {
-        let xRatio = (point.x - this.box.left) / (this.box.right - this.box.left);
-        let yRatio = (point.y - this.box.top) / (this.box.bottom - this.box.top);
-
-        let result =  xRatio >= yRatio;
-        return result;
-    }
-
-    inBottomLeft(point) {
-        let xRatio = (this.box.right - point.x) / (this.box.right - this.box.left);
-        let yRatio = (this.box.bottom - point.y) / (this.box.bottom - this.box.top);
-
-        let result =  xRatio >= yRatio;
-
-        return result;
-    }
-
-    inBottomRight(point) {
-        let xRatio = (this.box.right - point.x) / (this.box.right - this.box.left);
-        let yRatio = (point.y - this.box.top) / (this.box.bottom - this.box.top);
-
-        let result =  xRatio <= yRatio;
-
-        return result;
-    }
-
-    makeClip (context) {
-        context.beginPath();
-        context.moveTo(this.triangle[0].x, this.triangle[0].y);
-        context.lineTo(this.triangle[1].x, this.triangle[1].y);
-        context.lineTo(this.triangle[2].x, this.triangle[2].y);
-        context.closePath();
-        context.clip();
-    }
-
-    lower(current) {
-        return Math.max(0, current - crossFadeDelta);
-    }
-
-    raise (current) {
-        return Math.min(1.0, current + crossFadeDelta);
-    }
-
-    draw(context, point) {
-        if (this.testPoint(point)) {
-            if (this.newPoint) {
-                this.newPoint = false;
-                this.fromShow = 1.0;
-                this.toShow = 0.0;
-                [this.fromImage, this.toImage] = [this.toImage, this.fromImage];
-            }
-        }
-        else {
-            this.newPoint = true;
-        }
-
-        if (this.fromShow > 0.0 || this.toShow > 0.0) {
-            this.fromShow = this.lower(this.fromShow);
-            this.toShow = this.raise(this.toShow);
-        }
-
-        context.save();
-
-        this.makeClip(context);
-        context.save();
-
-        context.globalAlpha = this.fromShow;
-        context.drawImage(this.fromImage, 0, 0, canvas.width, canvas.width / RATIO);
-        context.restore();
-
-        context.globalAlpha = this.toShow;
-        context.drawImage(this.toImage, 0, 0, canvas.width, canvas.width / RATIO);
-
-        context.restore();
-
-        this.edgeList.forEach(edge => {
-            edge.draw(context);
-        });
-    }
-}
-
-let makeBoxes = scale =>{
-    let boxList = [
-            [{x:990, y:765},{x:900, y:765},{x:900, y:701.25}],
-            [{x:990, y:765},{x:990, y:701.25},{x:900, y:701.25}],
-            [{x:1080, y:637.5},{x:990, y:637.5},{x:990, y:765}],
-            [{x:1080, y:637.5},{x:1080, y:765},{x:990, y:765}],
-            [{x:900, y:510},{x:1080, y:510},{x:1080, y:637.5}],
-            [{x:900, y:510},{x:900, y:637.5},{x:1080, y:637.5}],
-            [{x:720, y:765},{x:720, y:510},{x:900, y:510}],
-            [{x:720, y:765},{x:900, y:765},{x:900, y:510}],
-            [{x:1080, y:1020},{x:1080, y:765},{x:720, y:765}],
-            [{x:1080, y:1020},{x:720, y:1020},{x:720, y:765}],
-            [{x:1440, y:1020},{x:1080, y:1020},{x:1080, y:510}],
-            [{x:1440, y:510},{x:1440, y:1020},{x:1080, y:510}],
-            [{x:1440, y:510},{x:720, y:510},{x:720, y:0}],
-            [{x:720, y:0},{x:1440, y:0},{x:1440, y:510}],
-            [{x:0, y:1020},{x:720, y:1020},{x:720, y:0}],
-            [{x:0, y:0},{x:0, y:1020},{x:720, y:0}],
-    ];
-
-    return boxList;
-}
-
 class Inputs {
     constructor(foreground) {
         this.foreground = foreground;
@@ -1051,25 +832,21 @@ class Inputs {
 let fore = $("#foreground");
 let inputs = new Inputs(fore);
 
-let make = () => {
-    canvas.width = $("#background").width();
-    canvas.height = $("#background").height();
-
-    return new BoxContainer(canvas.width / MAX_X, specList);
-}
-
-let boxContainer = make();
+let boxContainer = makeSpirals();
+let action = drawSpirals;
 
 $(window).resize(event => {
-    boxContainer = make();
+    boxContainer = makeSpirals();
 });
 
 let tick = 0;
 
-setInterval (() => {
-    let context = canvas.getContext("2d");
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    boxContainer.changeState(inputs.mousePosition, tick++);
-    boxContainer.draw(context);
-}, INTERVAL);
+let reset = () => {
+    setInterval (() => {
+        let context = canvas.getContext("2d");
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        action(context);
+    }, INTERVAL);
+}
 
+reset();
