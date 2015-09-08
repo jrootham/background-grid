@@ -5,6 +5,11 @@
     height:             900px;
 }
 
+.change
+{
+    background-color:   green;
+}
+
 #background
 {
     z-index:            -10;

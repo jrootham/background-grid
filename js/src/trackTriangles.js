@@ -146,6 +146,19 @@ const GREY_TEXT_COLOUR = 255;
 const GREY_TEXT_X = 320;
 const GREY_TEXT_Y = 620;
 
+$("#spirals").hide();
+
+$("#spirals").click(event => {
+    $("#spirals").hide();
+    $("#boxes").show();
+});
+
+$("#boxes").click(event => {
+    $("#spirals").show();
+    $("#boxes").hide();
+});
+
+
 let canvas = document.getElementById("drawing");
 
 let crossFadeTime = parseFloat($("input[name=crossFadeTime]:checked").val());
@@ -310,7 +323,7 @@ class BoxContainer {
 
     changeState(mousePosition, tick) {
         switch (this.state) {
-            case 0: {                   // Showing empty
+            case 0:                    // Showing empty
                 if (mousePosition != undefined) {
                     let found = this.boxList.find(box => {
                         return box.inOutside(mousePosition)
@@ -321,19 +334,22 @@ class BoxContainer {
                         this.state++;
                     }
                 }
-            }
-            case 1: {                   // Draswing black spiral
+                break;
+
+            case 1:                    // Draswing black spiral
                 if (this.blackShow.every(show => show >= 1)) {
                     this.startTick = tick;
                     this.state++;
                 }
-            }
-            case 2: {                   // Waiting
+                break;
+
+            case 2:                    // Waiting
                 if (tick - this.startTick > TEXT_DELAY_TICKS) {
                     this.state++;
                 }
-            }
-            case 3: {                   // Drawing black text
+                break;
+
+            case 3:                    // Drawing black text
                 if (mousePosition != undefined) {
                     let found = this.boxList.find(box => {
                         return box.inInside(mousePosition)
@@ -344,10 +360,10 @@ class BoxContainer {
                         this.state++;
                     }
                 }
-            }
-            case 4: {                   // Drawing grey spiral
+                break;
 
-            }
+            case 4:                    // Drawing grey spiral
+                break;
 
         }
     }
