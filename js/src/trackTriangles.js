@@ -146,37 +146,60 @@ const GREY_TEXT_COLOUR = 255;
 const GREY_TEXT_X = 320;
 const GREY_TEXT_Y = 620;
 
-$("#spirals").hide();
-
-$("#spirals").click(event => {
-    $("#spirals").hide();
-    $("#boxes").show();
-    boxContainer = makeBoxes();
-    action = drawBoxes;
-    reset();
-});
-
-$("#boxes").click(event => {
-    $("#spirals").show();
-    $("#boxes").hide();
-    boxContainer = makeSpirals();
-    action = drawSpirals;
-    reset();
-});
-
-
-let canvas = document.getElementById("drawing");
+let intervalId = undefined;
+let current = undefined;
 
 let crossFadeTime = parseFloat($("input[name=crossFadeTime]:checked").val());
 let crossFadeDelta = (INTERVAL / 1000)  / crossFadeTime;
-$("#debug1").html(`Time ${crossFadeTime} delta ${crossFadeDelta}`);
 
 let twoD = document.getElementById("two_d");
 let threeD = document.getElementById("three_d");
+let tick = 0;
 
 let lower = current => Math.max(0, current - crossFadeDelta);
 
 let raise = current => Math.min(1.0, current + crossFadeDelta);
+
+let boxContainer = undefined;
+
+let start = action => {
+    if (intervalId) {
+        clearInterval(intervalId);
+    }
+
+    intervalId = setInterval (() => {
+        let context = canvas.getContext("2d");
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        action(context);
+    }, INTERVAL);
+}
+
+
+let doSpirals = () => {
+    $("#spirals").hide();
+    $("#boxes").show();
+    boxContainer = makeSpirals();
+    start(drawSpirals);
+    current = doSpirals;
+}
+
+let doBoxes = () => {
+    $("#spirals").show();
+    $("#boxes").hide();
+    boxContainer = makeBoxes();
+    start(drawBoxes);
+    current = doBoxes;
+}
+
+$("#spirals").click(event => {
+    doSpirals();
+});
+
+$("#boxes").click(event => {
+    doBoxes();
+});
+
+let canvas = document.getElementById("drawing");
 
 let makeSpirals = () => {
     canvas.width = $("#background").width();
@@ -209,16 +232,111 @@ class PlainBoxContainer {
 
         this.scale = scale;
 
+        this.sizeX = MAX_X * scale;
+        this.sizeY = MAX_Y * scale;
+
         this.boxList = [
-            new PlainBox(this, specList[0]),
-            new PlainBox(this, specList[1]),
-            new PlainBox(this, specList[2]),
-            new PlainBox(this, specList[3]),
-            new PlainBox(this, specList[4]),
-            new PlainBox(this, specList[5]),
-            new PlainBox(this, specList[6]),
-            new PlainBox(this, specList[7])
+            new BoxBox(this, specList[0]),
+            new BoxBox(this, specList[1]),
+            new BoxBox(this, specList[2]),
+            new BoxBox(this, specList[3]),
+            new BoxBox(this, specList[4]),
+            new BoxBox(this, specList[5]),
+            new BoxBox(this, specList[6]),
+            new BoxBox(this, specList[7])
         ];
+    }
+
+    changeState(mousePosition) {
+        this.boxList.forEach(box => {
+            box.here = false;
+        });
+
+        if (mousePosition) {
+            this.boxList.forEach(box => {
+                if (box.inBox(mousePosition)) {
+                    box.here = true;
+                }
+            });
+        }
+    }
+
+    draw(context) {
+        context.drawImage(parent.twoD, 0, 0, this.sizeX, this.sizeY);
+
+        if (this.boxList.every(box => ! box.here))
+        {
+            this.boxList.forEach(box => box.show2D = 1.0);
+        }
+
+        this.boxList.forEach(box => box.draw(context));
+    }
+}
+
+class PlainBox {
+    constructor(parent, spec) {
+        this.parent = parent;
+
+        this.topLeftX = parent.scale * spec.topLeft.x;
+        this.topLeftY = parent.scale * spec.topLeft.y;
+        this.deltaX = parent.scale * spec.delta.x;
+        this.deltaY = parent.scale * spec.delta.y;
+    }
+
+    inBox(point) {
+        return point.x >= this.topLeftX
+            && point.x <= this.topLeftX + this.deltaX
+            && point.y >= this.topLeftY
+            && point.y <= this.topLeftY + this.deltaY;
+    }
+}
+
+class BoxBox extends PlainBox {
+    constructor(parent, spec) {
+        super(parent, spec);
+
+        this.here = false;
+        this.show2D = 1.0;
+    }
+
+    setClip(context) {
+        context.beginPath();
+        context.moveTo(this.topLeftX, this.topLeftY);
+        context.lineTo(this.topLeftX + this.deltaX, this.topLeftY);
+        context.lineTo(this.topLeftX + this.deltaX, this.topLeftY + this.deltaY);
+        context.lineTo(this.topLeftX, this.topLeftY + this.deltaY);
+//        context.closePath();
+        context.clip();
+    }
+
+    draw(context) {
+        console.log("corner", this.topLeftX, this.topLeftY, this.show2D);
+        if (this.show2D >= 1) {
+            if (this.here) {
+                this.show2D = lower(this.show2D);
+            }
+        }
+        else {
+            this.show2D = lower(this.show2D);
+        }
+
+        context.save();
+//        this.setClip(context);
+        context.save();
+
+        context.clearRect(0, 0, this.parent.sizeX, this.parent.sizeY);
+
+        context.save();
+        context.globalAlpha = this.show2D;
+        context.drawImage(parent.twoD, 0, 0, this.parent.sizeX, this.parent.sizeY);
+        context.restore();
+
+        context.save();
+        context.globalAlpha = 1.0 - this.show2D;
+        context.drawImage(parent.threeD, 0, 0, this.parent.sizeX, this.parent.sizeY);
+        context.restore();
+
+        context.restore();
     }
 }
 
@@ -360,7 +478,6 @@ class BoxContainer {
                     });
 
                     if (found) {
-                        $("#debug2").html("found in outside " + found.topLeftX + " " + found.topLeftY);
                         this.state++;
                     }
                 }
@@ -386,7 +503,6 @@ class BoxContainer {
                     });
 
                     if (found) {
-                        $("#debug2").html("found in inside " + found.topLeftX + " " + found.topLeftY);
                         this.state++;
                     }
                 }
@@ -407,26 +523,6 @@ class BoxContainer {
     draw(context) {
         this.stateList[this.state].call(this, context);
     }
-}
-
-class PlainBox {
-    constructor(parent, spec) {
-        this.parent = parent;
-
-        this.topLeftX = parent.scale * spec.topLeft.x;
-        this.topLeftY = parent.scale * spec.topLeft.y;
-        this.deltaX = parent.scale * spec.delta.x;
-        this.deltaY = parent.scale * spec.delta.y;
-    }
-
-    inBox(point) {
-        $("#debug1").html("inBox " + point.x + " " + point.y);
-        return point.x >= this.topLeftX
-            && point.x <= this.topLeftX + this.deltaX
-            && point.y >= this.topLeftY
-            && point.y <= this.topLeftY + this.deltaY;
-    }
-
 }
 
 class Box extends PlainBox {
@@ -570,8 +666,6 @@ class BoxUp extends BaseBox{
             let dy = point.y - this.topLeftY;
             let target = this.deltaY - dx * (this.deltaY / this.deltaX)
 
-            $("#debug1").html("UP dx " + dx + " dy " + dy + " target " + target);
-
             result = dy <= target;
         }
 
@@ -600,7 +694,6 @@ class BoxDown extends BaseBox{
             let dydx = dy / dx;;
             let ratio = this.deltaY / this.deltaX;
 
-            $("#debug1").html("Down dx " + dx + " dy " + dy + " dydx " + dydx + " ratio " + ratio);
             result = dydx <= ratio;
         }
 
@@ -832,21 +925,9 @@ class Inputs {
 let fore = $("#foreground");
 let inputs = new Inputs(fore);
 
-let boxContainer = makeSpirals();
-let action = drawSpirals;
-
 $(window).resize(event => {
-    boxContainer = makeSpirals();
+    current();
 });
 
-let tick = 0;
+doSpirals();
 
-let reset = () => {
-    setInterval (() => {
-        let context = canvas.getContext("2d");
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        action(context);
-    }, INTERVAL);
-}
-
-reset();
