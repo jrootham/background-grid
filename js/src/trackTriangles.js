@@ -305,12 +305,11 @@ class BoxBox extends PlainBox {
         context.lineTo(this.topLeftX + this.deltaX, this.topLeftY);
         context.lineTo(this.topLeftX + this.deltaX, this.topLeftY + this.deltaY);
         context.lineTo(this.topLeftX, this.topLeftY + this.deltaY);
-//        context.closePath();
+        context.closePath();
         context.clip();
     }
 
     draw(context) {
-        console.log("corner", this.topLeftX, this.topLeftY, this.show2D);
         if (this.show2D >= 1) {
             if (this.here) {
                 this.show2D = lower(this.show2D);
@@ -321,9 +320,7 @@ class BoxBox extends PlainBox {
         }
 
         context.save();
-//        this.setClip(context);
-        context.save();
-
+        this.setClip(context);
         context.clearRect(0, 0, this.parent.sizeX, this.parent.sizeY);
 
         context.save();
