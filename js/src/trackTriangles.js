@@ -163,8 +163,16 @@ let start = action => {
 
     intervalId = setInterval (() => {
         let context = canvas.getContext("2d");
+        canvas.width = $("#background").width();
+        canvas.height = $("#background").height();
+
         context.clearRect(0, 0, canvas.width, canvas.height);
+
+        context.save();
+        let scale = canvas.width / MAX_X;
+        context.scale(scale, scale);
         action(context);
+        context.restore();
     }, INTERVAL);
 }
 
@@ -194,17 +202,11 @@ $("#boxes").click(event => {
 let canvas = document.getElementById("drawing");
 
 let makeSpirals = () => {
-    canvas.width = $("#background").width();
-    canvas.height = $("#background").height();
-
-    return new BoxContainer(canvas.width / MAX_X, specList);
+    return new BoxContainer(specList);
 }
 
 let makeBoxes = () => {
-    canvas.width = $("#background").width();
-    canvas.height = $("#background").height();
-
-    return new PlainBoxContainer(canvas.width / MAX_X, specList);
+    return new PlainBoxContainer(specList);
 }
 
 let drawSpirals = context => {
@@ -218,14 +220,12 @@ let drawBoxes = context => {
 }
 
 class PlainBoxContainer {
-    constructor(scale, specList) {
+    constructor(specList) {
         this.twoD = twoD;
         this.threeD = threeD;
 
-        this.scale = scale;
-
-        this.sizeX = MAX_X * scale;
-        this.sizeY = MAX_Y * scale;
+        this.sizeX = MAX_X;
+        this.sizeY = MAX_Y;
 
         this.boxList = [
             new BoxBox(this, specList[0]),
@@ -255,6 +255,7 @@ class PlainBoxContainer {
     }
 
     draw(context) {
+        context.
         context.drawImage(parent.twoD, 0, 0, this.sizeX, this.sizeY);
 
         if (this.boxList.every(box => ! box.here))
@@ -270,10 +271,10 @@ class PlainBox {
     constructor(parent, spec) {
         this.parent = parent;
 
-        this.topLeftX = parent.scale * spec.topLeft.x;
-        this.topLeftY = parent.scale * spec.topLeft.y;
-        this.deltaX = parent.scale * spec.delta.x;
-        this.deltaY = parent.scale * spec.delta.y;
+        this.topLeftX = spec.topLeft.x;
+        this.topLeftY = spec.topLeft.y;
+        this.deltaX = spec.delta.x;
+        this.deltaY = spec.delta.y;
     }
 
     inBox(point) {
@@ -340,8 +341,7 @@ class BoxBox extends NullBox {
 }
 
 class BoxContainer {
-    constructor (scale, specList) {
-        this.scale = scale;
+    constructor(specList) {
         this.state = 0;
         this.stateList = [
             this.drawEmpty,
@@ -349,11 +349,11 @@ class BoxContainer {
             this.third,
         ];
 
-        this.pageVertical = PAGE_VERTICAL * scale;
-        this.pageHorizontal = PAGE_HORIZONTAL * scale;
-        this.blackTextX = BLACK_TEXT_X * scale;
-        this.blackTextY = BLACK_TEXT_Y * scale;
-        this.textHeight = TEXT_HEIGHT * scale;
+        this.pageVertical = PAGE_VERTICAL;
+        this.pageHorizontal = PAGE_HORIZONTAL;
+        this.blackTextX = BLACK_TEXT_X;
+        this.blackTextY = BLACK_TEXT_Y;
+        this.textHeight = TEXT_HEIGHT;
 
         this.blackShow = [0, 0, 0, 0, 0, 0, 0, 0, 0];
         this.greyShow = [0, 0, 0, 0, 0, 0, 0, 0];
@@ -464,8 +464,16 @@ class Box extends PlainBox {
     }
 
     drawFinal(context) {
+        context.save();
         context.strokeStyle = "black";
+
+        context.save();
+        
+        context.moveTo(this.topLeftX, this.topLeftY, this.deltaX, this.deltaY);
         context.strokeRect(this.topLeftX, this.topLeftY, this.deltaX, this.deltaY);
+        context.restore();
+
+        context.restore();
     }
 }
 
