@@ -145,6 +145,20 @@ let intervalId = undefined;
 
 let crossFadeTime = parseFloat($("input[name=crossFadeTime]:checked").val());
 let crossFadeDelta = (INTERVAL / 1000)  / crossFadeTime;
+$('input[type=radio][name=crossFadeTime]').change(
+    function() {
+        crossFadeTime = parseFloat($("input[name=crossFadeTime]:checked").val());
+        crossFadeDelta = (INTERVAL / 1000)  / crossFadeTime;
+        doSpirals();
+    });
+
+let lineWeight = parseFloat($("input[name=lineWeight]:checked").val());
+$('input[type=radio][name=lineWeight]').change(
+    function() {
+        lineWeight = parseFloat($("input[name=lineWeight]:checked").val());
+        doSpirals();
+    });
+
 
 let twoD = document.getElementById("two_d");
 let threeD = document.getElementById("three_d");
@@ -360,9 +374,9 @@ class BoxContainer {
         this.blackTextShow = 0;
 
         this.boxList = [
-            new BoxWithText(this, specList[0], "A1"),
-            new BoxDownOutside(this, specList[1], "A2"),
-            new BoxUpInside(this, specList[2], "A3"),
+            new BoxTop(this, specList[0], "A1"),
+            new BoxTopRight(this, specList[1], "A2"),
+            new BoxRight(this, specList[2], "A3"),
             new BoxDownInside(this, specList[3], "A4"),
             new BoxUpOutside(this, specList[4], "A5"),
             new BoxDownOutside(this, specList[5], "A6"),
@@ -466,12 +480,13 @@ class Box extends PlainBox {
     drawFinal(context) {
         context.save();
         context.strokeStyle = "black";
+        context.lineWidth = lineWeight;
 
-        context.save();
-        
-        context.moveTo(this.topLeftX, this.topLeftY, this.deltaX, this.deltaY);
-        context.strokeRect(this.topLeftX, this.topLeftY, this.deltaX, this.deltaY);
-        context.restore();
+        context.beginPath();
+        context.moveTo(this.topLeftX, this.topLeftY);
+        context.lineTo(this.topLeftX, this.topLeftY + this.deltaY);
+        context.lineTo(this.topLeftX + this.deltaX, this.topLeftY + this.deltaY);
+        context.stroke();
 
         context.restore();
     }
@@ -494,9 +509,7 @@ class CentreBox extends Box {
     }
 
     drawEmpty(context) {
-    }
-
-    drawFinal(context) {
+        this.drawFinal(context);
     }
 
     inOutside(point) {
@@ -803,6 +816,72 @@ class BoxWithText extends BoxUpOutside {
         context.restore();
     }
 
+}
+
+class BoxTop extends BoxWithText {
+    constructor(parent, spec, pageSize) {
+        super(parent, spec, pageSize);
+    }
+
+    drawFinal(context) {
+        context.save();
+        context.strokeStyle = "black";
+        context.lineWidth = lineWeight;
+
+        context.beginPath();
+        context.moveTo(this.topLeftX + this.deltaX, this.topLeftY);
+        context.lineTo(this.topLeftX, this.topLeftY);
+        context.lineTo(this.topLeftX, this.topLeftY + this.deltaY);
+        context.lineTo(this.topLeftX + this.deltaX, this.topLeftY + this.deltaY);
+        context.stroke();
+
+        context.restore();
+    }
+
+}
+
+class BoxTopRight extends BoxDownOutside {
+    constructor(parent, spec, pageSize) {
+        super(parent, spec, pageSize);
+    }
+
+    drawFinal(context) {
+        context.save();
+        context.strokeStyle = "black";
+        context.lineWidth = lineWeight;
+
+        context.beginPath();
+        context.moveTo(this.topLeftX + this.deltaX, this.topLeftY);
+        context.lineTo(this.topLeftX, this.topLeftY);
+        context.lineTo(this.topLeftX, this.topLeftY + this.deltaY);
+        context.lineTo(this.topLeftX + this.deltaX, this.topLeftY + this.deltaY);
+        context.closePath();
+        context.stroke();
+
+        context.restore();
+    }
+
+}
+
+class BoxRight extends BoxUpInside {
+    constructor(parent, spec, pageSize) {
+        super(parent, spec, pageSize);
+    }
+
+    drawFinal(context) {
+        context.save();
+        context.strokeStyle = "black";
+        context.lineWidth = lineWeight;
+
+        context.beginPath();
+        context.moveTo(this.topLeftX, this.topLeftY);
+        context.lineTo(this.topLeftX, this.topLeftY + this.deltaY);
+        context.lineTo(this.topLeftX + this.deltaX, this.topLeftY + this.deltaY);
+        context.lineTo(this.topLeftX + this.deltaX, this.topLeftY);
+        context.stroke();
+
+        context.restore();
+    }
 }
 
 let specList = [
