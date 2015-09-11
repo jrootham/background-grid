@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Track</title>
+    <link href="../css/grid.css" rel="stylesheet" type="text/css" />
     <link href="../css/track.css" rel="stylesheet" type="text/css" />
     <script type="text/javascript" src="../js/jquery-1.10.2.min.js"></script>
+    <script type="text/javascript" src="../js/build/arrayFns.js"></script>
 </head>
 <body>
 <img id="images">
@@ -12,40 +14,11 @@
     <img id="three_d" src="../images/vignelli-images-3d-all.gif" alt="3 D" />
 </div>
 <h1>Track</h1>
-Crossfade time (seconds)
-<div>
-    <input type="radio" name="crossFadeTime" value="0.25">0.25</input>
-    <input type="radio" name="crossFadeTime" value="0.5">0.5</input>
-    <input type="radio" name="crossFadeTime" value="0.75">0.75</input>
-    <input type="radio" name="crossFadeTime" value="1.0" checked>1.0</input>
-    <input type="radio" name="crossFadeTime" value="1.25">1.25</input>
-    <input type="radio" name="crossFadeTime" value="1.5">1.5</input>
-    <input type="radio" name="crossFadeTime" value="1.75">1.75</input>
-    <input type="radio" name="crossFadeTime" value="2">2.0</input>
-    <input type="radio" name="crossFadeTime" value="2.25">2.25</input>
-    <input type="radio" name="crossFadeTime" value="2.5">2.5</input>
-    <input type="radio" name="crossFadeTime" value="2.75">2.75</input>
-    <input type="radio" name="crossFadeTime" value="3">3.0</input>
-</div>
-Line width
-<div>
-    <input type="radio" name="lineWeight" value="0.1">0.1</input>
-    <input type="radio" name="lineWeight" value="0.2">0.2</input>
-    <input type="radio" name="lineWeight" value="0.3">0.3</input>
-    <input type="radio" name="lineWeight" value="0.4">0.4</input>
-    <input type="radio" name="lineWeight" value="0.5">0.5</input>
-    <input type="radio" name="lineWeight" value="0.6">0.6</input>
-    <input type="radio" name="lineWeight" value="0.7">0.7</input>
-    <input type="radio" name="lineWeight" value="0.8">0.8</input>
-    <input type="radio" name="lineWeight" value="0.9">0.9</input>
-    <input type="radio" name="lineWeight" value="1.0" checked>1.0</input>
-</div>
 <div id="spirals" class="change">&gt; Spirals </div>
 <div id="boxes" class="change">&gt; Boxes </div>
 
 <div>Move the mouse around the background.</div>
-<div id="debug1">&nbsp;</div>
-<div id="debug2">&nbsp;</div>
+
 <div id="container">
     <div id="background" class="location">
     </div>

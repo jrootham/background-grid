@@ -6,167 +6,40 @@
  * Copyright © 2014 Jim Rootham
  */
 
-if (!Array.prototype.find) {
-    Array.prototype.find = function(predicate) {
-        if (this == null) {
-            throw new TypeError('Array.prototype.find called on null or undefined');
-        }
-        if (typeof predicate !== 'function') {
-            throw new TypeError('predicate must be a function');
-        }
-        var list = Object(this);
-        var length = list.length >>> 0;
-        var thisArg = arguments[1];
-        var value;
-
-        for (var i = 0; i < length; i++) {
-            value = list[i];
-            if (predicate.call(thisArg, value, i, list)) {
-                return value;
-            }
-        }
-        return undefined;
-    };
-}
-
-// Production steps of ECMA-262, Edition 5, 15.4.4.19
-// Reference: http://es5.github.io/#x15.4.4.19
-if (!Array.prototype.map) {
-
-    Array.prototype.map = function(callback, thisArg) {
-
-        var T, A, k;
-
-        if (this == null) {
-            throw new TypeError(' this is null or not defined');
-        }
-
-        // 1. Let O be the result of calling ToObject passing the |this|
-        //    value as the argument.
-        var O = Object(this);
-
-        // 2. Let lenValue be the result of calling the Get internal
-        //    method of O with the argument "length".
-        // 3. Let len be ToUint32(lenValue).
-        var len = O.length >>> 0;
-
-        // 4. If IsCallable(callback) is false, throw a TypeError exception.
-        // See: http://es5.github.com/#x9.11
-        if (typeof callback !== 'function') {
-            throw new TypeError(callback + ' is not a function');
-        }
-
-        // 5. If thisArg was supplied, let T be thisArg; else let T be undefined.
-        if (arguments.length > 1) {
-            T = thisArg;
-        }
-
-        // 6. Let A be a new array created as if by the expression new Array(len)
-        //    where Array is the standard built-in constructor with that name and
-        //    len is the value of len.
-        A = new Array(len);
-
-        // 7. Let k be 0
-        k = 0;
-
-        // 8. Repeat, while k < len
-        while (k < len) {
-
-            var kValue, mappedValue;
-
-            // a. Let Pk be ToString(k).
-            //   This is implicit for LHS operands of the in operator
-            // b. Let kPresent be the result of calling the HasProperty internal
-            //    method of O with argument Pk.
-            //   This step can be combined with c
-            // c. If kPresent is true, then
-            if (k in O) {
-
-                // i. Let kValue be the result of calling the Get internal
-                //    method of O with argument Pk.
-                kValue = O[k];
-
-                // ii. Let mappedValue be the result of calling the Call internal
-                //     method of callback with T as the this value and argument
-                //     list containing kValue, k, and O.
-                mappedValue = callback.call(T, kValue, k, O);
-
-                // iii. Call the DefineOwnProperty internal method of A with arguments
-                // Pk, Property Descriptor
-                // { Value: mappedValue,
-                //   Writable: true,
-                //   Enumerable: true,
-                //   Configurable: true },
-                // and false.
-
-                // In browsers that support Object.defineProperty, use the following:
-                // Object.defineProperty(A, k, {
-                //   value: mappedValue,
-                //   writable: true,
-                //   enumerable: true,
-                //   configurable: true
-                // });
-
-                // For best browser support, use the following:
-                A[k] = mappedValue;
-            }
-            // d. Increase k by 1.
-            k++;
-        }
-
-        // 9. return A
-        return A;
-    };
-}
-
 const EPSILON = 0.000001;
 const INTERVAL = 20;
 
 const MAX_X = 1440;
 const MAX_Y = 1020;
 const RATIO = MAX_X / MAX_Y;
-const DASH_COLOUR = "x0FA9D8";
+//
+const DASH_COLOUR = "#a6eaff";
 const DASH_DASH = 5;
 const DASH_EMPTY = 5;
 
-const PAGE_VERTICAL = 7;
-const PAGE_HORIZONTAL = 7;
-const PAGE_FONT = "bolder 2vw Helvetica";
+const PAGE_VERTICAL = 8;
+const PAGE_HORIZONTAL = 8;
+const PAGE_FONT = "3em HelveticaNeue-Light";
+const PAGE_FONT_COLOUR = 110;
 
-const TEXT_DELAY_TIME = 1.0;
-const TEXT_DELAY_TICKS = TEXT_DELAY_TIME / INTERVAL;
+const TEXT_FONT = "2em HelveticaNeue-Bold";
+const TEXT_HEIGHT = 36;
+const BLACK_TEXT_X = 10;
+const BLACK_TEXT_Y = 100;
 
-const TEXT_FONT = "bolder 2vw Helvetica";
-const TEXT_HEIGHT = 32;
-const BLACK_TEXT_X = 32;
-const BLACK_TEXT_Y = 50;
+const CROSS_FADE_TIME = 1.0;
+const CROSS_FADE_DELTA = (INTERVAL / 1000)  / CROSS_FADE_TIME;
+
+let LINE_WEIGHT = 0.5;
 
 let intervalId = undefined;
 
-let crossFadeTime = parseFloat($("input[name=crossFadeTime]:checked").val());
-let crossFadeDelta = (INTERVAL / 1000)  / crossFadeTime;
-$('input[type=radio][name=crossFadeTime]').change(
-    function() {
-        crossFadeTime = parseFloat($("input[name=crossFadeTime]:checked").val());
-        crossFadeDelta = (INTERVAL / 1000)  / crossFadeTime;
-        doSpirals();
-    });
-
-let lineWeight = parseFloat($("input[name=lineWeight]:checked").val());
-$('input[type=radio][name=lineWeight]').change(
-    function() {
-        lineWeight = parseFloat($("input[name=lineWeight]:checked").val());
-        doSpirals();
-    });
-
-
 let twoD = document.getElementById("two_d");
 let threeD = document.getElementById("three_d");
-let tick = 0;
 
-let lower = current => Math.max(0, current - crossFadeDelta);
+let lower = current => Math.max(0, current - CROSS_FADE_DELTA);
 
-let raise = current => Math.min(1.0, current + crossFadeDelta);
+let raise = current => Math.min(1.0, current + CROSS_FADE_DELTA);
 
 let boxContainer = undefined;
 
@@ -224,7 +97,7 @@ let makeBoxes = () => {
 }
 
 let drawSpirals = context => {
-    boxContainer.changeState(inputs.mousePosition, tick++);
+    boxContainer.changeState(inputs.mousePosition);
     boxContainer.draw(context);
 }
 
@@ -237,9 +110,6 @@ class PlainBoxContainer {
     constructor(specList) {
         this.twoD = twoD;
         this.threeD = threeD;
-
-        this.sizeX = MAX_X;
-        this.sizeY = MAX_Y;
 
         this.boxList = [
             new BoxBox(this, specList[0]),
@@ -269,8 +139,7 @@ class PlainBoxContainer {
     }
 
     draw(context) {
-        context.
-        context.drawImage(parent.twoD, 0, 0, this.sizeX, this.sizeY);
+        context.drawImage(parent.twoD, 0, 0, MAX_X, MAX_Y);
 
         if (this.boxList.every(box => ! box.here))
         {
@@ -338,16 +207,16 @@ class BoxBox extends NullBox {
 
         context.save();
         this.setClip(context);
-        context.clearRect(0, 0, this.parent.sizeX, this.parent.sizeY);
+        context.clearRect(0, 0, MAX_X, MAX_Y);
 
         context.save();
         context.globalAlpha = this.show2D;
-        context.drawImage(parent.twoD, 0, 0, this.parent.sizeX, this.parent.sizeY);
+        context.drawImage(parent.twoD, 0, 0, MAX_X, MAX_Y);
         context.restore();
 
         context.save();
         context.globalAlpha = 1.0 - this.show2D;
-        context.drawImage(parent.threeD, 0, 0, this.parent.sizeX, this.parent.sizeY);
+        context.drawImage(parent.threeD, 0, 0, MAX_X, MAX_Y);
         context.restore();
 
         context.restore();
@@ -363,14 +232,11 @@ class BoxContainer {
             this.third,
         ];
 
-        this.pageVertical = PAGE_VERTICAL;
-        this.pageHorizontal = PAGE_HORIZONTAL;
         this.blackTextX = BLACK_TEXT_X;
         this.blackTextY = BLACK_TEXT_Y;
         this.textHeight = TEXT_HEIGHT;
 
         this.blackShow = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-        this.greyShow = [0, 0, 0, 0, 0, 0, 0, 0];
         this.blackTextShow = 0;
 
         this.boxList = [
@@ -395,7 +261,7 @@ class BoxContainer {
         this.drawBlackText(context);
     }
 
-    changeState(mousePosition, tick) {
+    changeState(mousePosition) {
         switch (this.state) {
             case 0:                    // Showing empty
                 if (mousePosition != undefined) {
@@ -480,7 +346,7 @@ class Box extends PlainBox {
     drawFinal(context) {
         context.save();
         context.strokeStyle = "black";
-        context.lineWidth = lineWeight;
+        context.lineWidth = LINE_WEIGHT;
 
         context.beginPath();
         context.moveTo(this.topLeftX, this.topLeftY);
@@ -529,8 +395,8 @@ class BaseBox extends Box {
 
     diagonalDraw(context, fromX, fromY, toX, toY) {
         context.save();
-        context.strokeStyle = DASH_COLOUR;
         context.setLineDash([DASH_DASH, DASH_EMPTY]);
+        context.strokeStyle = DASH_COLOUR;
         context.beginPath();
         context.moveTo(fromX, fromY);
         context.lineTo(toX, toY);
@@ -565,7 +431,7 @@ class BaseBox extends Box {
         this.fill (context, this.outside(), 0, intensity);
 
         context.save();
-        context.fillStyle = `rgba(255, 255, 255, ${intensity})`;
+        context.fillStyle = `rgba(${PAGE_FONT_COLOUR}, ${PAGE_FONT_COLOUR}, ${PAGE_FONT_COLOUR}, ${intensity})`;
         context.font = PAGE_FONT;
         context.textAlign = this.pageAlign;
         context.textBaseline = this.pageBaseline;
@@ -643,8 +509,8 @@ class BoxDown extends BaseBox{
 class BoxUpInside extends BoxUp{
     constructor(parent, spec, pageSize) {
         super(parent, spec, pageSize);
-        this.pageX = this.topLeftX + this.deltaX - parent.pageHorizontal;
-        this.pageY = this.topLeftY + this.deltaY - parent.pageVertical;
+        this.pageX = this.topLeftX + this.deltaX - PAGE_HORIZONTAL;
+        this.pageY = this.topLeftY + this.deltaY - PAGE_VERTICAL;
         this.pageAlign = "end";
         this.pageBaseline = "bottom"
     }
@@ -679,8 +545,8 @@ class BoxUpInside extends BoxUp{
 class BoxDownInside extends BoxDown{
     constructor(parent, spec, pageSize) {
         super(parent, spec, pageSize);
-        this.pageX = this.topLeftX + parent.pageHorizontal;
-        this.pageY = this.topLeftY + this.deltaY - parent.pageVertical;
+        this.pageX = this.topLeftX + PAGE_HORIZONTAL;
+        this.pageY = this.topLeftY + this.deltaY - PAGE_VERTICAL;
         this.pageAlign = "start";
         this.pageBaseline = "bottom";
     }
@@ -714,8 +580,8 @@ class BoxDownInside extends BoxDown{
 class BoxUpOutside extends BoxUp{
     constructor(parent, spec, pageSize) {
         super(parent, spec, pageSize);
-        this.pageX = this.topLeftX + parent.pageHorizontal;
-        this.pageY = this.topLeftY + parent.pageVertical;
+        this.pageX = this.topLeftX + PAGE_HORIZONTAL;
+        this.pageY = this.topLeftY + PAGE_VERTICAL;
         this.pageAlign = "start";
         this.pageBaseline = "top"
     }
@@ -748,8 +614,8 @@ class BoxUpOutside extends BoxUp{
 class BoxDownOutside extends BoxDown{
     constructor(parent, spec, pageSize) {
         super(parent, spec, pageSize);
-        this.pageX = this.topLeftX + this.deltaX - parent.pageHorizontal;
-        this.pageY = this.topLeftY + parent.pageVertical;
+        this.pageX = this.topLeftX + this.deltaX - PAGE_HORIZONTAL;
+        this.pageY = this.topLeftY + PAGE_VERTICAL;
         this.pageAlign = "end";
         this.pageBaseline = "top"
     }
@@ -786,6 +652,8 @@ class BoxWithText extends BoxUpOutside {
 
     drawBlackText(context, blackShow) {
         let text = [
+            "The Vignelli Canon",
+            "",
             "Semantics",
             "Syntactics",
             "Pragmatics",
@@ -798,9 +666,17 @@ class BoxWithText extends BoxUpOutside {
             "Timelessness",
             "Responsibility",
             "Equity",
+            "Grid",
+            "Space",
+            "Type",
+            "Scale",
+            "Layout",
+            "Sequence",
+            "Texture",
+            "Color"
         ];
 
-        this.drawText(context, this.parent.blackTextX, this.parent.blackTextY, 255, text, blackShow);
+        this.drawText(context, BLACK_TEXT_X, BLACK_TEXT_Y, 255, text, blackShow);
     }
 
     drawText(context, x, y, colour, text, intensity) {
@@ -826,7 +702,7 @@ class BoxTop extends BoxWithText {
     drawFinal(context) {
         context.save();
         context.strokeStyle = "black";
-        context.lineWidth = lineWeight;
+        context.lineWidth = LINE_WEIGHT;
 
         context.beginPath();
         context.moveTo(this.topLeftX + this.deltaX, this.topLeftY);
@@ -848,7 +724,7 @@ class BoxTopRight extends BoxDownOutside {
     drawFinal(context) {
         context.save();
         context.strokeStyle = "black";
-        context.lineWidth = lineWeight;
+        context.lineWidth = LINE_WEIGHT;
 
         context.beginPath();
         context.moveTo(this.topLeftX + this.deltaX, this.topLeftY);
@@ -871,7 +747,7 @@ class BoxRight extends BoxUpInside {
     drawFinal(context) {
         context.save();
         context.strokeStyle = "black";
-        context.lineWidth = lineWeight;
+        context.lineWidth = LINE_WEIGHT;
 
         context.beginPath();
         context.moveTo(this.topLeftX, this.topLeftY);
@@ -898,6 +774,8 @@ let specList = [
 
 class Inputs {
     constructor(foreground) {
+        this.scale = foreground.width() / MAX_X;
+
         this.foreground = foreground;
         this.mousePosition = undefined;
 
@@ -912,15 +790,14 @@ class Inputs {
 
     saveMouse(event) {
         let location = this.foreground.offset();
-        let x = event.pageX - location.left;
-        let y = event.pageY - location.top;
+        let x = (event.pageX - location.left) / this.scale;
+        let y = (event.pageY - location.top) / this.scale;
 
         return {x: x, y: y};
     }
 }
 
-let fore = $("#foreground");
-let inputs = new Inputs(fore);
+let inputs = new Inputs($("#foreground"));
 
 $(window).resize(event => {
     doSpirals();
