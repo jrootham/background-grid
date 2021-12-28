@@ -50,3 +50,21 @@
 {
     display: none;
 }
+
+#exit-text
+{
+    color:              white;
+    position:           fixed;
+    display:            block;
+    width:              100%;
+    height:             100vh;
+    top:                0;
+    left:               17.5%;
+    padding-top:        4%;
+    padding-left:       2.5%;
+    font-family:        "HelveticaNeue-Light";
+    font-size:          1.6vw;
+    line-height:        2.13vw;
+    letter-spacing:     0.09vw;
+    z-index:            20;
+}

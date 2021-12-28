@@ -67,6 +67,7 @@ let start = action => {
 let doSpirals = () => {
     $("#spirals").hide();
     $("#boxes").show();
+    $("#exit-text").hide();
     boxContainer = makeSpirals();
     start(drawSpirals);
 }
@@ -74,6 +75,7 @@ let doSpirals = () => {
 let doBoxes = () => {
     $("#spirals").show();
     $("#boxes").hide();
+    $("#exit-text").hide();
     boxContainer = makeBoxes();
     start(drawBoxes);
 }
@@ -230,6 +232,7 @@ class BoxContainer {
             this.drawEmpty,
             this.second,
             this.third,
+            this.fourth
         ];
 
         this.blackTextX = BLACK_TEXT_X;
@@ -258,7 +261,11 @@ class BoxContainer {
 
     third(context) {
         this.drawAllBlack(context);
-        this.drawBlackText(context);
+        this.drawBlackText();        // This trigggers fade in of overlay
+    }
+
+    fourth(context) {
+        this.drawAllBlack(context);
     }
 
     changeState(mousePosition) {
@@ -281,7 +288,11 @@ class BoxContainer {
                 }
                 break;
 
-            case 2:                    // Drawing black text
+            case 2:                    // Trigger rawing black text
+                this.state++;
+                break;
+
+            case 3:                    // Draw all graphics
         }
     }
 
@@ -311,10 +322,10 @@ class BoxContainer {
         });
     }
 
-    drawBlackText(context, blackShow)
+    drawBlackText()
     {
-        this.blackTextShow = raise(this.blackTextShow);
-        this.boxList[0].drawBlackText(context, this.blackTextShow);
+        console.log("Fade in");
+        $("#exit-text").fadeIn();
     }
 
     drawEmpty(context) {
@@ -476,7 +487,6 @@ class BoxUp extends BaseBox{
 
         return result;
     }
-
 }
 
 class BoxDown extends BaseBox{
@@ -538,8 +548,6 @@ class BoxUpInside extends BoxUp{
             {x: this.topLeftX + this.deltaX, y: this.topLeftY},
         ]
     }
-
-
 }
 
 class BoxDownInside extends BoxDown{
@@ -645,56 +653,7 @@ class BoxDownOutside extends BoxDown{
     }
 }
 
-class BoxWithText extends BoxUpOutside {
-    constructor(parent, spec, pageSize) {
-        super(parent, spec, pageSize);
-    }
-
-    drawBlackText(context, blackShow) {
-        let text = [
-            "The Vignelli Canon",
-            "",
-            "Semantics",
-            "Syntactics",
-            "Pragmatics",
-            "Discipline",
-            "Appropriateness",
-            "Ambiguity",
-            "Design is One",
-            "Visual Power",
-            "Intellectual Elegance",
-            "Timelessness",
-            "Responsibility",
-            "Equity",
-            "Grid",
-            "Space",
-            "Type",
-            "Scale",
-            "Layout",
-            "Sequence",
-            "Texture",
-            "Color"
-        ];
-
-        this.drawText(context, BLACK_TEXT_X, BLACK_TEXT_Y, 255, text, blackShow);
-    }
-
-    drawText(context, x, y, colour, text, intensity) {
-        context.save();
-        context.fillStyle = `rgba(${colour}, ${colour}, ${colour}, ${intensity})`;
-        context.font = TEXT_FONT;
-
-        text.forEach(line => {
-            context.fillText(line, x, y);
-            y += this.parent.textHeight;
-        });
-
-        context.restore();
-    }
-
-}
-
-class BoxTop extends BoxWithText {
+class BoxTop extends BoxUpOutside {
     constructor(parent, spec, pageSize) {
         super(parent, spec, pageSize);
     }
